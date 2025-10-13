@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: weather-app
+    env: python
+    buildCommand: ""
+    startCommand: "python app.py"
