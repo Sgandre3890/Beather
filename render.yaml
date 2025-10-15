@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: beather-web
-    env: python
-    rootDir: beatherWeb
-    buildCommand: "pip install -r beatherWeb/requirements.txt"
-    startCommand: "python app.py"
