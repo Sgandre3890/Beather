@@ -1,6 +1,7 @@
 services:
   - type: web
-    name: weather-app
+    name: beather-web
     env: python
+    rootDir: beatherWeb
     buildCommand: ""
     startCommand: "python app.py"
