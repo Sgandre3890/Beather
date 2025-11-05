@@ -6,5 +6,5 @@
 ### UML Diagram
 ![Logo](https://github.com/Sgandre3890/Beather/blob/staticWeb/Images/Updated%20UML.png)
 
-### Gantt Work Chart (Will be updated continuously)
+### Gantt Work Chart (Updated: 11-05-2025 )
 ![Logo](https://github.com/Sgandre3890/Beather/blob/staticWeb/Images/Updated%20Gantt.png)
