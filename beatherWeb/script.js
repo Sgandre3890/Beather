@@ -4,12 +4,12 @@ const apiKey =
 	'04b2c70f5678cb788cb9d62c0325ef32';
 
 $(document).ready(function () {
-	weatherFn('Salt Lake City'); // Set Noida as the initial city
+	weatherFn('Salt Lake City'); 
 });
 
 async function weatherFn(cName) {
 	const temp =
-		`${url}?q=${cName}&appid=${apiKey}&units=metric`;
+		`${url}?q=${cName}&appid=${apiKey}&units=imperial`;
 	try {
 		const res = await fetch(temp);
 		const data = await res.json();
@@ -28,7 +28,7 @@ function weatherShowFn(data) {
 	$('#date').text(moment().
 		format('MMMM Do YYYY, h:mm:ss a')); // Corrected date format to include year
 	$('#temperature').
-		html(`${Math.round(data.main.temp)}°C`); // Rounded temperature
+		html(`${Math.round(data.main.temp)}°F`); // Rounded temperature
 	$('#description').
 		text(data.weather[0].description);
 	$('#wind-speed').

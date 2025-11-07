@@ -5,7 +5,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(to right, #4CAF50, #2196F3);
+    background: linear-gradient(to right, #8fd2e4, #094f89);
 }
 
 .container {
@@ -79,10 +79,10 @@ body {
 
 #wind-speed {
     font-size: 16px;
-    color: rgb(255, 0, 0);
+    color: rgb(0, 0, 0);
 }
 
 #date {
-    font-size: 14px;
-    color: rgb(255, 0, 0);
+    font-size: 15px;
+    color: rgb(0, 0, 0);
 }
