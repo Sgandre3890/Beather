@@ -8,6 +8,19 @@ body {
     background: linear-gradient(to right, #8fd2e4, #094f89);
 }
 
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+nav a {
+  display: inline-block;
+  margin-right: 10px;
+}
+
+
+
 .container {
     text-align: center;
 }

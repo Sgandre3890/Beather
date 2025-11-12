@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Weather Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="map.html">Weather Map</a>
+  </nav>
+
+  <div id="map" style="height: 800px;"></div>
+  <script>
+    var map = L.map('map').setView([40.7608, -111.8910], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
+      attribution: '© OpenWeatherMap'
+    }).addTo(map);
+  </script>
+</body>
+</html>
