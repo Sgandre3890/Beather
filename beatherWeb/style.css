@@ -34,6 +34,13 @@ nav a {
     width: 450px;
 }
 
+.logo {
+    width: 220px;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px auto;
+}
+
 .weather-card:hover {
     transform: scale(1.05);
 }
