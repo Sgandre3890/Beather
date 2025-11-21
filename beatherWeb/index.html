@@ -15,6 +15,26 @@
 
 <body>
 
+	<!-- Background video/image -->
+	<video id="weather-video" class="weather-video" autoplay muted loop>
+		<source src="../Images/weatherbackground/BackGround.webp" type="video/webp">
+	</video>
+
+	<!-- Background audio -->
+	<audio id="weather-audio" class="weather-audio" loop>
+		<source src="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
+	</audio>
+
+	<!-- Control buttons (bottom-right) -->
+	<div class="controls">
+		<button id="toggle-audio" class="control-btn audio-btn" title="Toggle Audio">
+			<i class="fas fa-volume-up"></i>
+		</button>
+		<button id="toggle-background" class="control-btn bg-btn" title="Toggle Background">
+			<i class="fas fa-image"></i>
+		</button>
+	</div>
+
 	<nav>
     <a href="index.html">Home</a>
     <a href="map.html">Weather Map</a>
