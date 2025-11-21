@@ -34,10 +34,28 @@ const weatherState = {
 // Asset base path
 const assetBasePath = '../Images/weatherbackground/';
 
+// Initialize splash screen animation
+function initSplashScreen() {
+	const splashScreen = $('#splash-screen');
+	
+	// After animation completes, hide splash screen
+	setTimeout(function () {
+		splashScreen.fadeOut(300, function () {
+			$(this).remove();
+		});
+	}, 2000); // Match animation duration
+}
+
 $(document).ready(function () {
-	weatherFn('Salt Lake City');
-	initControls();
-	playBackgroundMedia();
+	// Show splash screen animation first
+	initSplashScreen();
+	
+	// Delay weather loading to coincide with splash screen
+	setTimeout(function () {
+		weatherFn('Salt Lake City');
+		initControls();
+		playBackgroundMedia();
+	}, 1200);
 });
 
 // Initialize control buttons

@@ -15,6 +15,11 @@
 
 <body>
 
+	<!-- Splash screen -->
+	<div id="splash-screen" class="splash-screen">
+		<img src="../Images/BeatherLogo.png" alt="Beather Logo" class="splash-logo">
+	</div>
+
 	<!-- Background video/image -->
 	<video id="weather-video" class="weather-video" autoplay muted loop>
 		<source src="../Images/weatherbackground/BackGround.webp" type="video/webp">
@@ -42,6 +47,7 @@
 
 	<div class="container">
 		<div class="weather-card">
+			<img src="../Images/BeatherLogo.png" alt="Beather Logo" class="header-logo">
 			<h1>
 				<img src="../Images/Beather.png" alt="Beather logo" class="logo">
 			</h1>
@@ -59,7 +65,6 @@
 				class="animate__animated animate__fadeIn">
 				<h3 id="city-name"></h3>
 				<p id="date"></p>
-				<img id="weather-icon" src="../Images/BeatherLogo.png" alt="Weather Icon">
 				<p id="temperature"></p>
 				<p id="description"></p>
 				<p id="wind-speed"></p>
