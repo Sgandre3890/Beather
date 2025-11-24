@@ -20,18 +20,26 @@
 		<img src="../Images/beatherlogo2.png" alt="Beather Logo" class="splash-logo">
 	</div>
 	
-	<!-- Background video/image -->
-	<video id="weather-video" class="weather-video" autoplay muted loop>
-		<source src="../Images/weatherbackground/BackGround.webp" type="video/webp">
+	<!-- Background video (looping MP4) -->
+	<div id="page-bg" class="page-bg"></div>
+	<video id="weather-video" class="weather-video" autoplay muted loop playsinline>
+		<source src="../Images/weatherbackground/background.mp4" type="video/mp4">
 	</video>
 
 	<!-- Background audio -->
 	<audio id="weather-audio" class="weather-audio" loop>
-		<source src="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
+		<source src="../Images/weatherbackground/backgroundmusic.mp3" type="audio/mpeg">
 	</audio>
 
 	<!-- Control buttons (bottom-right) -->
 	<div class="controls">
+		<button id="detect-location" class="control-btn location-btn" title="Detect Location">
+			<i class="fas fa-map-marker-alt"></i>
+		</button>
+		<!-- Shown only if autoplay is blocked to let user enable sound -->
+		<button id="enable-sound" class="control-btn" title="Enable Sound" style="display:none">
+			<i class="fas fa-play"></i>
+		</button>
 		<button id="toggle-audio" class="control-btn audio-btn" title="Toggle Audio">
 			<i class="fas fa-volume-up"></i>
 		</button>

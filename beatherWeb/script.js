@@ -18,8 +18,8 @@ const weatherThemeMap = {
 	dust: { video: 'fog.mp4', audio: 'fog.wav' }
 };
 
-// Default background and audio
-const defaultTheme = { video: 'BackGround.webp', audio: 'Backgroundmusic.mp3' };
+// Default background and audio (video is now an MP4 loop)
+const defaultTheme = { video: 'background.mp4', audio: 'backgroundmusic.mp3' };
 
 // State management
 const weatherState = {
@@ -28,7 +28,8 @@ const weatherState = {
 	currentVideo: defaultTheme.video,
 	currentAudio: defaultTheme.audio,
 	videoPlaying: false,
-	audioPlaying: false
+	audioPlaying: false,
+	audioPosition: 0
 };
 
 // Asset base path
@@ -41,6 +42,51 @@ function initSplashScreen() {
 	setTimeout(function () {
 		splashScreen.fadeOut(300, function () {
 			$(this).remove();
+				// After splash is removed, show and play the default background video
+				// (Don't try to use the MP4 as a CSS background image)
+				try {
+					const videoEl = document.getElementById('weather-video');
+					if (videoEl) {
+						videoEl.classList.remove('hidden');
+						// Ensure defaults are set before playing
+						weatherState.currentVideo = defaultTheme.video;
+						weatherState.currentAudio = defaultTheme.audio;
+						playVideo();
+					} else {
+						// Fallback: leave #page-bg as-is or set a neutral background color
+						const pageBg = document.getElementById('page-bg');
+						if (pageBg) pageBg.style.background = '#111';
+					}
+				} catch (e) {
+					console.warn('Could not start background video:', e);
+				}
+
+				// (Defaults already set above when starting the video)
+
+			// Try to play background audio (may be blocked by autoplay policies)
+			const audioEl = document.getElementById('weather-audio');
+			const enableBtn = document.getElementById('enable-sound');
+			if (audioEl) {
+				audioEl.loop = true;
+				audioEl.volume = 0.6;
+				audioEl.play().then(() => {
+					// audio started
+					if (enableBtn) enableBtn.style.display = 'none';
+				}).catch(err => {
+					console.log('Autoplay blocked for background audio:', err);
+					// show enable button
+					if (enableBtn) enableBtn.style.display = 'inline-flex';
+				});
+
+				// Wire enable button to start audio if user clicks
+				if (enableBtn) {
+					enableBtn.addEventListener('click', function () {
+						audioEl.play().then(() => {
+							enableBtn.style.display = 'none';
+						}).catch(e => console.error(e));
+					});
+				}
+			}
 		});
 	}, 2000);
 }
@@ -48,11 +94,41 @@ function initSplashScreen() {
 $(document).ready(function () {
 	// Show splash first
 	initSplashScreen();
-	// Delay app init to allow splash to show
+	// Initialize controls and wait for user to request weather
 	setTimeout(function () {
-		weatherFn('Salt Lake City');
 		initControls();
-		playBackgroundMedia();
+		// Wire up city input button
+		$('#city-input-btn').on('click', function () {
+			const city = $('#city-input').val().trim();
+			if (city) {
+				weatherFn(city);
+			} else {
+				alert('Please enter a city name.');
+			}
+		});
+
+		// Detect-location button: toggles detection when clicked
+		$('#detect-location').on('click', function () {
+			const btn = $(this);
+			// If already enabled, do nothing (or you could disable)
+			if (!btn.hasClass('enabled')) {
+				// enable UI
+				btn.addClass('enabled');
+				// attempt geolocation
+				if (navigator.geolocation) {
+					navigator.geolocation.getCurrentPosition(function (pos) {
+						const lat = pos.coords.latitude;
+						const lon = pos.coords.longitude;
+						// Call weather API using lat/lon
+						weatherFn({ lat, lon });
+					}, function (err) {
+						alert('Unable to retrieve location: ' + err.message);
+					});
+				} else {
+					alert('Geolocation is not supported by your browser.');
+				}
+			}
+		});
 	}, 500);
 });
 
@@ -119,17 +195,27 @@ function playAudio() {
 	const audioEl = document.getElementById('weather-audio');
 	const audioSrc = assetBasePath + weatherState.currentAudio;
 
-	if (audioEl.src !== audioSrc) {
+	// If the source changed, update it and reset stored position
+	const currentSrc = audioEl.getAttribute('src') || audioEl.src || '';
+	if (!currentSrc.endsWith(audioSrc)) {
 		audioEl.src = audioSrc;
 		audioEl.load();
+		// reset stored position because this is a new track
+		weatherState.audioPosition = 0;
 	}
 
 	if (weatherState.audioEnabled) {
+		// restore position if we have one
+		if (weatherState.audioPosition && audioEl.currentTime !== weatherState.audioPosition) {
+			try { audioEl.currentTime = weatherState.audioPosition; } catch (e) { /* ignore */ }
+		}
 		audioEl.play().catch(err => {
 			console.log('Audio autoplay prevented:', err);
 		});
 		weatherState.audioPlaying = true;
 	} else {
+		// store current time so we can resume later
+		try { weatherState.audioPosition = audioEl.currentTime; } catch (e) { weatherState.audioPosition = 0; }
 		audioEl.pause();
 		weatherState.audioPlaying = false;
 	}
@@ -150,27 +236,44 @@ function updateVideoState() {
 
 // Update audio state
 function updateAudioState() {
+	const audioEl = document.getElementById('weather-audio');
 	if (weatherState.audioEnabled) {
+		// resume from last position
+		if (audioEl) {
+			try {
+				if (weatherState.audioPosition) audioEl.currentTime = weatherState.audioPosition;
+			} catch (e) { /* ignore */ }
+		}
 		playAudio();
 	} else {
-		const audioEl = document.getElementById('weather-audio');
-		audioEl.pause();
+		if (audioEl) {
+			try { weatherState.audioPosition = audioEl.currentTime; } catch (e) { weatherState.audioPosition = 0; }
+			audioEl.pause();
+		}
 		weatherState.audioPlaying = false;
 	}
 }
 
 // Fetch weather and switch background/audio
-async function weatherFn(cName) {
-	const temp =
-		`${url}?q=${cName}&appid=${apiKey}&units=imperial`;
+async function weatherFn(query) {
+	let endpoint;
+	if (typeof query === 'string') {
+		endpoint = `${url}?q=${encodeURIComponent(query)}&appid=${apiKey}&units=imperial`;
+	} else if (query && query.lat !== undefined && query.lon !== undefined) {
+		endpoint = `${url}?lat=${query.lat}&lon=${query.lon}&appid=${apiKey}&units=imperial`;
+	} else {
+		console.error('Invalid weather query:', query);
+		return;
+	}
+
 	try {
-		const res = await fetch(temp);
+		const res = await fetch(endpoint);
 		const data = await res.json();
 		if (res.ok) {
 			// Get weather main category and switch background/audio
 			const weatherMain = data.weather[0].main.toLowerCase();
 			switchWeatherTheme(weatherMain);
-			
+
 			weatherShowFn(data);
 		} else {
 			alert('City not found. Please try again.');
@@ -193,10 +296,44 @@ function switchWeatherTheme(weatherMain) {
 	}
 }
 
+// Live clock handling
+let clockInterval = null;
+let currentTimezoneOffset = null; // seconds offset from UTC
+
+function startClock(timezoneOffsetSeconds) {
+	stopClock();
+	currentTimezoneOffset = typeof timezoneOffsetSeconds === 'number' ? timezoneOffsetSeconds : null;
+	updateClock();
+	clockInterval = setInterval(updateClock, 1000);
+}
+
+function stopClock() {
+	if (clockInterval) {
+		clearInterval(clockInterval);
+		clockInterval = null;
+	}
+}
+
+function updateClock() {
+	let now = new Date();
+	if (currentTimezoneOffset !== null) {
+		// Convert to UTC then apply offset
+		const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+		const target = new Date(utc + currentTimezoneOffset * 1000);
+		$('#date').text(moment(target).format('MMMM Do YYYY, h:mm:ss a'));
+	} else {
+		$('#date').text(moment(now).format('MMMM Do YYYY, h:mm:ss a'));
+	}
+}
+
 function weatherShowFn(data) {
 	$('#city-name').text(data.name);
-	$('#date').text(moment().
-		format('MMMM Do YYYY, h:mm:ss a'));
+	// Start live clock using city's timezone offset (seconds)
+	if (data && data.timezone !== undefined) {
+		startClock(data.timezone);
+	} else {
+		startClock(null);
+	}
 	$('#temperature').
 		html(`${Math.round(data.main.temp)}°F`);
 	$('#description').
