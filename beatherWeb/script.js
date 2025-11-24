@@ -29,13 +29,17 @@ function hideGameOverlay() {
 function startGame() {
 	gameScore = 0;
 	gameTime = 100;
+	sunClickTimestamps = [];
 	$('#game-score').text('Score: 0');
 	$('#game-timer').text(gameTime);
+	let bestScore = 0;
 	$('#game-area').empty();
 	spawnGameIcons();
 	gameTimerInterval = setInterval(() => {
 		gameTime--;
 		$('#game-timer').text(gameTime);
+		// Load best score from localStorage
+		bestScore = parseInt(localStorage.getItem('beather_best_score') || '0', 10);
 		if (gameTime <= 0) {
 			endGame();
 		}
@@ -51,6 +55,12 @@ function endGame() {
 	stopGame();
 	$('#game-timer').text('Time Up!');
 	$('#game-area').html('<div style="font-size:1.3em;margin-top:18px;">Final Score: ' + gameScore + '</div>');
+		let newBest = false;
+		if (gameScore > bestScore) {
+			bestScore = gameScore;
+			localStorage.setItem('beather_best_score', bestScore);
+			newBest = true;
+		}
 }
 
 function spawnGameIcons() {
@@ -75,6 +85,16 @@ function spawnGameIcons() {
 		if (!gameActive || gameTime <= 0) return;
 		gameScore += gameIcons[0].points;
 		$('#game-score').text('Score: ' + gameScore);
+		// 记录点击时间戳
+		const now = Date.now();
+		sunClickTimestamps.push(now);
+		// 移除超过5秒的点击
+		sunClickTimestamps = sunClickTimestamps.filter(ts => now - ts <= 5000);
+		if (sunClickTimestamps.length >= 10) {
+			gameTime += 2;
+			$('#game-timer').text(gameTime + ' (+2s!)');
+			sunClickTimestamps = [];
+		}
 		spawnGameIcons();
 	});
 	area.append(sunIcon);
