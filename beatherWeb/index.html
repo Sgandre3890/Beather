@@ -26,6 +26,18 @@
 		<source src="../Images/weatherbackground/background.mp4" type="video/mp4">
 	</video>
 
+	<!-- Sunny Clicker Game Overlay -->
+	<div id="game-overlay" class="hidden">
+		<div class="game-content">
+			<h2>Sunny Clicker</h2>
+			<div id="game-timer">10</div>
+			<div id="game-score">Score: 0</div>
+			<div id="game-area"></div>
+			<button id="game-exit">Exit Game</button>
+		</div>
+	</div>
+
+
 	<!-- Background audio -->
 	<audio id="weather-audio" class="weather-audio" loop>
 		<source src="../Images/weatherbackground/backgroundmusic.mp3" type="audio/mpeg">
@@ -33,18 +45,23 @@
 
 	<!-- Control buttons (bottom-right) -->
 	<div class="controls">
-		<button id="detect-location" class="control-btn location-btn" title="Detect Location">
-			<i class="fas fa-map-marker-alt"></i>
-		</button>
+		<div style="display: flex; gap: 8px;">
+			<button id="gamepad-btn" class="control-btn gamepad-btn" title="Play Game">
+				<i class="fas fa-gamepad"></i>
+			</button>
+			<button id="detect-location" class="control-btn location-btn" title="Detect Location">
+				<i class="fas fa-map-marker-alt"></i>
+			</button>
+			<button id="toggle-audio" class="control-btn audio-btn" title="Toggle Audio">
+				<i class="fas fa-volume-up"></i>
+			</button>
+			<button id="toggle-background" class="control-btn bg-btn" title="Toggle Background">
+				<i class="fas fa-image"></i>
+			</button>
+		</div>
 		<!-- Shown only if autoplay is blocked to let user enable sound -->
 		<button id="enable-sound" class="control-btn" title="Enable Sound" style="display:none">
 			<i class="fas fa-play"></i>
-		</button>
-		<button id="toggle-audio" class="control-btn audio-btn" title="Toggle Audio">
-			<i class="fas fa-volume-up"></i>
-		</button>
-		<button id="toggle-background" class="control-btn bg-btn" title="Toggle Background">
-			<i class="fas fa-image"></i>
 		</button>
 	</div>
 

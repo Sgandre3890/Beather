@@ -1,3 +1,85 @@
+// --- Sunny Clicker Game ---
+let gameActive = false;
+let gameScore = 0;
+let gameTime = 10;
+let gameTimerInterval = null;
+
+function showGameOverlay() {
+	$('#game-overlay').removeClass('hidden');
+	$('.controls').hide();
+	gameActive = true;
+	startGame();
+}
+
+function hideGameOverlay() {
+	$('#game-overlay').addClass('hidden');
+	$('.controls').show();
+	gameActive = false;
+	stopGame();
+}
+
+function startGame() {
+	gameScore = 0;
+	gameTime = 10;
+	$('#game-score').text('Score: 0');
+	$('#game-timer').text(gameTime);
+	$('#game-area').empty();
+	spawnSunnyIcon();
+	gameTimerInterval = setInterval(() => {
+		gameTime--;
+		$('#game-timer').text(gameTime);
+		if (gameTime <= 0) {
+			endGame();
+		}
+	}, 1000);
+}
+
+function stopGame() {
+	clearInterval(gameTimerInterval);
+	$('#game-area').empty();
+}
+
+function endGame() {
+	stopGame();
+	$('#game-timer').text('Time Up!');
+	$('#game-area').html('<div style="font-size:1.3em;margin-top:18px;">Final Score: ' + gameScore + '</div>');
+}
+
+function spawnSunnyIcon() {
+	if (!gameActive || gameTime <= 0) return;
+	const area = $('#game-area');
+	area.empty();
+	// Use SunnyIcon.svg as the clickable icon
+	const icon = $('<img class="sunny-icon" src="../Images/WebAssets/SunnyIcon.svg" alt="Sunny">');
+	// Random position within area
+	const maxX = area.width() - 56;
+	const maxY = area.height() - 56;
+	const x = Math.floor(Math.random() * maxX);
+	const y = Math.floor(Math.random() * maxY);
+	icon.css({ left: x + 'px', top: y + 'px' });
+	icon.on('click', function () {
+		if (!gameActive || gameTime <= 0) return;
+		gameScore++;
+		$('#game-score').text('Score: ' + gameScore);
+		spawnSunnyIcon();
+	});
+	area.append(icon);
+}
+
+$(document).ready(function () {
+	// Gamepad button toggles game overlay
+	$('#gamepad-btn, #gamepad-btn-mini').on('click', function () {
+		if (!gameActive) {
+			showGameOverlay();
+		} else {
+			hideGameOverlay();
+		}
+	});
+	// Exit button in game overlay
+	$('#game-exit').on('click', function () {
+		hideGameOverlay();
+	});
+});
 const url =
 	'https://api.openweathermap.org/data/2.5/weather';
 const apiKey =
