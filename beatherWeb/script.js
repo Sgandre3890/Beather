@@ -1,8 +1,16 @@
-// --- Sunny Clicker Game ---
+
+// --- Sunny Clicker Game (v2) ---
 let gameActive = false;
 let gameScore = 0;
-let gameTime = 10;
+let gameTime = 100;
 let gameTimerInterval = null;
+const gameIcons = [
+	{ src: '../Images/WebAssets/SunnyIcon.svg', type: 'sun', points: +1 },
+	{ src: '../Images/WebAssets/cloud.svg', type: 'cloud', points: -1 },
+	{ src: '../Images/WebAssets/PartlySunnyIcon.svg', type: 'partly', points: -1 },
+	{ src: '../Images/WebAssets/SunnyIconV2.svg', type: 'sun2', points: +1 },
+	// Add more distractors if available
+];
 
 function showGameOverlay() {
 	$('#game-overlay').removeClass('hidden');
@@ -20,11 +28,11 @@ function hideGameOverlay() {
 
 function startGame() {
 	gameScore = 0;
-	gameTime = 10;
+	gameTime = 100;
 	$('#game-score').text('Score: 0');
 	$('#game-timer').text(gameTime);
 	$('#game-area').empty();
-	spawnSunnyIcon();
+	spawnGameIcons();
 	gameTimerInterval = setInterval(() => {
 		gameTime--;
 		$('#game-timer').text(gameTime);
@@ -45,25 +53,54 @@ function endGame() {
 	$('#game-area').html('<div style="font-size:1.3em;margin-top:18px;">Final Score: ' + gameScore + '</div>');
 }
 
-function spawnSunnyIcon() {
+function spawnGameIcons() {
 	if (!gameActive || gameTime <= 0) return;
 	const area = $('#game-area');
 	area.empty();
-	// Use SunnyIcon.svg as the clickable icon
-	const icon = $('<img class="sunny-icon" src="../Images/WebAssets/SunnyIcon.svg" alt="Sunny">');
-	// Random position within area
+	// Always spawn one sun icon
+	let positions = [];
 	const maxX = area.width() - 56;
 	const maxY = area.height() - 56;
-	const x = Math.floor(Math.random() * maxX);
-	const y = Math.floor(Math.random() * maxY);
-	icon.css({ left: x + 'px', top: y + 'px' });
-	icon.on('click', function () {
+	// Place sun icon first
+	let sunX, sunY, tries = 0;
+	do {
+		sunX = Math.floor(Math.random() * maxX);
+		sunY = Math.floor(Math.random() * maxY);
+		tries++;
+	} while (tries < 10 && positions.some(pos => Math.abs(pos.x - sunX) < 60 && Math.abs(pos.y - sunY) < 60));
+	positions.push({ x: sunX, y: sunY });
+	const sunIcon = $('<img class="sunny-icon" src="' + gameIcons[0].src + '" alt="sun">');
+	sunIcon.css({ left: sunX + 'px', top: sunY + 'px' });
+	sunIcon.on('click', function () {
 		if (!gameActive || gameTime <= 0) return;
-		gameScore++;
+		gameScore += gameIcons[0].points;
 		$('#game-score').text('Score: ' + gameScore);
-		spawnSunnyIcon();
+		spawnGameIcons();
 	});
-	area.append(icon);
+	area.append(sunIcon);
+
+	// Spawn 3–5 random distractors (not sun)
+	const distractors = gameIcons.filter(ic => ic.points < 0);
+	const numDistractors = 3 + Math.floor(Math.random() * 3); // 3–5
+	for (let i = 0; i < numDistractors; i++) {
+		let iconData = distractors[Math.floor(Math.random() * distractors.length)];
+		let x, y, tries = 0;
+		do {
+			x = Math.floor(Math.random() * maxX);
+			y = Math.floor(Math.random() * maxY);
+			tries++;
+		} while (positions.some(pos => Math.abs(pos.x - x) < 60 && Math.abs(pos.y - y) < 60) && tries < 10);
+		positions.push({ x, y });
+		const icon = $('<img class="sunny-icon" src="' + iconData.src + '" alt="' + iconData.type + '">');
+		icon.css({ left: x + 'px', top: y + 'px' });
+		icon.on('click', function () {
+			if (!gameActive || gameTime <= 0) return;
+			gameScore += iconData.points;
+			$('#game-score').text('Score: ' + gameScore);
+			spawnGameIcons();
+		});
+		area.append(icon);
+	}
 }
 
 $(document).ready(function () {
