@@ -89,20 +89,9 @@ nav a {
 
 
 
-/* Container fade-in animation */
-@keyframes containerFadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
 .container {
     text-align: center;
-    animation: containerFadeIn 0.8s ease-in-out 1.2s forwards;
-    opacity: 0;
+    opacity: 1;
 }
 
 .weather-card {
