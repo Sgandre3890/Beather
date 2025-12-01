@@ -4,6 +4,8 @@ let gameActive = false;
 let gameScore = 0;
 let gameTime = 100;
 let gameTimerInterval = null;
+// persisted best score
+let bestScore = parseInt(localStorage.getItem('beather_best_score') || '0', 10);
 const gameIcons = [
 	{ src: '../Images/WebAssets/SunnyIcon.svg', type: 'sun', points: +1 },
 	{ src: '../Images/WebAssets/cloud.svg', type: 'cloud', points: -1 },
@@ -30,16 +32,15 @@ function startGame() {
 	gameScore = 0;
 	gameTime = 100;
 	sunClickTimestamps = [];
+	// reload best score from storage at start
+	bestScore = parseInt(localStorage.getItem('beather_best_score') || '0', 10);
 	$('#game-score').text('Score: 0');
 	$('#game-timer').text(gameTime);
-	let bestScore = 0;
 	$('#game-area').empty();
 	spawnGameIcons();
 	gameTimerInterval = setInterval(() => {
 		gameTime--;
 		$('#game-timer').text(gameTime);
-		// Load best score from localStorage
-		bestScore = parseInt(localStorage.getItem('beather_best_score') || '0', 10);
 		if (gameTime <= 0) {
 			endGame();
 		}
