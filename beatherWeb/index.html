@@ -26,15 +26,41 @@
 		<source src="../Images/weatherbackground/background.mp4" type="video/mp4">
 	</video>
 
-	<!-- Sunny Clicker Game Overlay -->
+	<!-- Game selection menu -->
+	<div id="game-menu" class="hidden">
+		<div class="game-menu-content">
+			<h2>Choose a Game</h2>
+			<div class="game-list">
+				<div class="game-card" data-game="sunny">
+					<img src="../Images/WebAssets/SunnyIcon.svg" alt="Sunny Clicker" />
+					<div class="game-card-title">Sunny Clicker</div>
+					<div class="game-card-desc">Click suns, avoid distractors. Frenzy & bonuses included.</div>
+				</div>
+				<div class="game-card" data-game="flappy">
+					<img src="../Images/WebAssets/cloud.svg" alt="Flappy Cloud" />
+					<div class="game-card-title">Flappy Cloud</div>
+					<div class="game-card-desc">Tap to fly the cloud. Don't hit the ground or the pillars.</div>
+				</div>
+			</div>
+			<button id="game-menu-cancel" class="menu-btn">Cancel</button>
+		</div>
+	</div>
+
+	<!-- Generic Game Overlay (selected game content will be injected) -->
 	<div id="game-overlay" class="hidden">
 		<div class="game-content">
-			<h2>Sunny Clicker</h2>
-			<div id="game-timer">10</div>
-			<div id="game-score">Score: 0</div>
-			<div id="frenzy-banner" class="hidden">FRENZY! +5s paused — All clicks +1</div>
+			<h2 id="game-title">Game</h2>
+			<div id="game-info-row">
+				<div id="game-timer">-</div>
+				<div id="game-score">Score: 0</div>
+				<div id="best-score" style="margin-left:12px;">Best: 0</div>
+			</div>
+			<div id="frenzy-banner" class="hidden">FRENZY! +5s paused  All clicks +1</div>
 			<div id="game-area"></div>
-			<button id="game-exit">Exit Game</button>
+			<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+				<button id="game-exit">Exit Game</button>
+				<button id="game-restart">Restart</button>
+			</div>
 		</div>
 	</div>
 

@@ -19,18 +19,47 @@ const gameIcons = [
 	// Add more distractors if available
 ];
 
+// Active game identifier: 'sunny' or 'flappy'
+let activeGame = null;
+
+// Flappy Cloud game state
+let flappy = {
+	canvas: null,
+	ctx: null,
+	width: 520,
+	height: 360,
+	cloudY: 180,
+	cloudX: 100,
+	velocity: 0,
+	gravity: 0.5,
+	lift: -8.5,
+	pipes: [],
+	pipeGap: 120,
+	pipeWidth: 52,
+	frameCount: 0,
+	score: 0,
+	running: false,
+	loopId: null
+};
+
 function showGameOverlay() {
+	$('#game-menu').addClass('hidden');
 	$('#game-overlay').removeClass('hidden');
 	$('.controls').hide();
 	gameActive = true;
-	startGame();
+	// start the selected game
+	if (!activeGame) activeGame = 'sunny';
+	if (activeGame === 'sunny') startGame();
+	if (activeGame === 'flappy') startFlappy();
 }
 
 function hideGameOverlay() {
 	$('#game-overlay').addClass('hidden');
 	$('.controls').show();
 	gameActive = false;
-	stopGame();
+	// stop whatever game is running
+	if (activeGame === 'sunny') stopGame();
+	if (activeGame === 'flappy') stopFlappy();
 }
 
 function startGame() {
@@ -166,16 +195,36 @@ function spawnGameIcons() {
 
 $(document).ready(function () {
 	// Gamepad button toggles game overlay
-	$('#gamepad-btn, #gamepad-btn-mini').on('click', function () {
-		if (!gameActive) {
-			showGameOverlay();
-		} else {
-			hideGameOverlay();
-		}
+	// Show game selection on gamepad click
+	$('#gamepad-btn').on('click', function () {
+		$('#game-menu').removeClass('hidden');
 	});
+
+	// Menu card selection
+	$(document).on('click', '.game-card', function () {
+		const g = $(this).data('game');
+		activeGame = g;
+		// set title and reset area
+		$('#game-title').text(g === 'sunny' ? 'Sunny Clicker' : 'Flappy Cloud');
+		$('#game-area').removeClass('flappy');
+		$('#frenzy-banner').addClass('hidden');
+		$('#best-score').text('Best: ' + (localStorage.getItem('beather_best_score_' + g) || '0'));
+		// Show overlay and start game
+		showGameOverlay();
+	});
+
+	$('#game-menu-cancel').on('click', function () { $('#game-menu').addClass('hidden'); });
 	// Exit button in game overlay
 	$('#game-exit').on('click', function () {
 		hideGameOverlay();
+	});
+	// Restart button
+	$('#game-restart').on('click', function () {
+		if (activeGame === 'sunny') {
+			stopGame(); startGame();
+		} else if (activeGame === 'flappy') {
+			stopFlappy(); startFlappy();
+		}
 	});
 });
 const url =
