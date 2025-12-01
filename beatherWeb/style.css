@@ -36,6 +36,16 @@
     font-size: 1.5em;
     margin-bottom: 18px;
 }
+#frenzy-banner {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(90deg,#ff3d00,#ff9800);
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+#frenzy-banner.hidden { display: none; }
 #game-area {
     width: 260px;
     height: 180px;

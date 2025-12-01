@@ -6,6 +6,11 @@ let gameTime = 100;
 let gameTimerInterval = null;
 // persisted best score
 let bestScore = parseInt(localStorage.getItem('beather_best_score') || '0', 10);
+// click timestamps for sun clicks
+let sunClickTimestamps = [];
+// frenzy state
+let frenzyActive = false;
+let frenzyTimeout = null;
 const gameIcons = [
 	{ src: '../Images/WebAssets/SunnyIcon.svg', type: 'sun', points: +1 },
 	{ src: '../Images/WebAssets/cloud.svg', type: 'cloud', points: -1 },
@@ -84,17 +89,46 @@ function spawnGameIcons() {
 	sunIcon.css({ left: sunX + 'px', top: sunY + 'px' });
 	sunIcon.on('click', function () {
 		if (!gameActive || gameTime <= 0) return;
+		// If frenzy active, every click gives +1
+		if (frenzyActive) {
+			gameScore += 1;
+			$('#game-score').text('Score: ' + gameScore + ' (FRENZY)');
+			spawnGameIcons();
+			return;
+		}
+		// Normal behavior: add sun points and record timestamp
 		gameScore += gameIcons[0].points;
 		$('#game-score').text('Score: ' + gameScore);
-		// 记录点击时间戳
 		const now = Date.now();
 		sunClickTimestamps.push(now);
-		// 移除超过5秒的点击
-		sunClickTimestamps = sunClickTimestamps.filter(ts => now - ts <= 5000);
-		if (sunClickTimestamps.length >= 10) {
+		// Count within 5s and 10s windows
+		const count5 = sunClickTimestamps.filter(ts => now - ts <= 5000).length;
+		const count10 = sunClickTimestamps.filter(ts => now - ts <= 10000).length;
+		// 10 clicks in 5s => +2s
+		if (count5 >= 10) {
 			gameTime += 2;
 			$('#game-timer').text(gameTime + ' (+2s!)');
+			// clear 5s-like timestamps to avoid repeat
 			sunClickTimestamps = [];
+		} else if (count10 >= 15) {
+			// Trigger frenzy: pause timer for 5s and enable frenzy behavior
+			if (!frenzyActive) {
+				frenzyActive = true;
+				clearInterval(gameTimerInterval);
+				$('#frenzy-banner').removeClass('hidden');
+				// clear timestamps so it doesn't immediately retrigger
+				sunClickTimestamps = [];
+				frenzyTimeout = setTimeout(() => {
+					frenzyActive = false;
+					$('#frenzy-banner').addClass('hidden');
+					// resume timer
+					gameTimerInterval = setInterval(() => {
+						gameTime--;
+						$('#game-timer').text(gameTime);
+						if (gameTime <= 0) endGame();
+					}, 1000);
+				}, 5000);
+			}
 		}
 		spawnGameIcons();
 	});
@@ -116,6 +150,12 @@ function spawnGameIcons() {
 		icon.css({ left: x + 'px', top: y + 'px' });
 		icon.on('click', function () {
 			if (!gameActive || gameTime <= 0) return;
+			if (frenzyActive) {
+				gameScore += 1; // any click adds during frenzy
+				$('#game-score').text('Score: ' + gameScore + ' (FRENZY)');
+				spawnGameIcons();
+				return;
+			}
 			gameScore += iconData.points;
 			$('#game-score').text('Score: ' + gameScore);
 			spawnGameIcons();
