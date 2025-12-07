@@ -5,7 +5,14 @@ let gameScore = 0;
 let gameTime = 100;
 let gameTimerInterval = null;
 // persisted best score
-let bestScore = parseInt(localStorage.getItem('beather_best_score') || '0', 10);
+// helper for per-game best score storage
+function getBestScore(game) {
+	const v = localStorage.getItem('beather_best_score_' + game);
+	return v === null ? null : parseInt(v, 10);
+}
+function setBestScore(game, score) {
+	localStorage.setItem('beather_best_score_' + game, score);
+}
 // click timestamps for sun clicks
 let sunClickTimestamps = [];
 // frenzy state
@@ -31,8 +38,9 @@ let flappy = {
 	cloudY: 180,
 	cloudX: 100,
 	velocity: 0,
-	gravity: 0.5,
-	lift: -8.5,
+	// stronger gravity for more challenge; smaller lift so clicks produce smaller hops
+	gravity: 0.45,
+	lift: -1.8,
 	pipes: [],
 	pipeGap: 120,
 	pipeWidth: 52,
@@ -66,8 +74,10 @@ function startGame() {
 	gameScore = 0;
 	gameTime = 100;
 	sunClickTimestamps = [];
-	// reload best score from storage at start
-	bestScore = parseInt(localStorage.getItem('beather_best_score') || '0', 10);
+	// reload best score from storage at start (show 0 if none)
+	const bs = getBestScore('sunny');
+	const displayBest = bs === null ? 0 : bs;
+	$('#best-score').text('Best: ' + displayBest);
 	$('#game-score').text('Score: 0');
 	$('#game-timer').text(gameTime);
 	$('#game-area').empty();
@@ -90,12 +100,13 @@ function endGame() {
 	stopGame();
 	$('#game-timer').text('Time Up!');
 	$('#game-area').html('<div style="font-size:1.3em;margin-top:18px;">Final Score: ' + gameScore + '</div>');
-		let newBest = false;
-		if (gameScore > bestScore) {
-			bestScore = gameScore;
-			localStorage.setItem('beather_best_score', bestScore);
-			newBest = true;
-		}
+        	// Persist best score for sunny: if none exists, set to this run; otherwise update only when exceeded
+        	const stored = getBestScore('sunny');
+        	if (stored === null) {
+        		setBestScore('sunny', gameScore);
+        	} else if (gameScore > stored) {
+        		setBestScore('sunny', gameScore);
+        	}
 }
 
 function spawnGameIcons() {
@@ -292,29 +303,21 @@ function initSplashScreen() {
 
 				// (Defaults already set above when starting the video)
 
-			// Try to play background audio (may be blocked by autoplay policies)
+				// Try to play background audio (may be blocked by autoplay policies)
 			const audioEl = document.getElementById('weather-audio');
-			const enableBtn = document.getElementById('enable-sound');
 			if (audioEl) {
 				audioEl.loop = true;
 				audioEl.volume = 0.6;
 				audioEl.play().then(() => {
 					// audio started
-					if (enableBtn) enableBtn.style.display = 'none';
+					weatherState.audioPlaying = true;
 				}).catch(err => {
 					console.log('Autoplay blocked for background audio:', err);
-					// show enable button
-					if (enableBtn) enableBtn.style.display = 'inline-flex';
+					// mark audio as not playing and ensure toggle shows disabled state
+					weatherState.audioPlaying = false;
+					weatherState.audioEnabled = false;
+					try { updateButtonState($('#toggle-audio'), false); } catch (e) { }
 				});
-
-				// Wire enable button to start audio if user clicks
-				if (enableBtn) {
-					enableBtn.addEventListener('click', function () {
-						audioEl.play().then(() => {
-							enableBtn.style.display = 'none';
-						}).catch(e => console.error(e));
-					});
-				}
 			}
 		});
 	}, 2000);
@@ -326,8 +329,8 @@ $(document).ready(function () {
 	// Initialize controls and wait for user to request weather
 	setTimeout(function () {
 		initControls();
-		// Wire up city input button
-		$('#city-input-btn').on('click', function () {
+		// Wire up city input button (use off/on to avoid duplicate handlers)
+		$('#city-input-btn').off('click').on('click', function () {
 			const city = $('#city-input').val().trim();
 			if (city) {
 				weatherFn(city);
@@ -367,6 +370,14 @@ function initControls() {
 	const bgBtn = $('#toggle-background');
 
 	audioBtn.on('click', function () {
+		const audioEl = document.getElementById('weather-audio');
+		// If audio isn't playing (autoplay blocked), try to start audio on this explicit user gesture
+		if (!weatherState.audioPlaying) {
+			weatherState.audioEnabled = true;
+			updateAudioState();
+			updateButtonState(audioBtn, true);
+			return;
+		}
 		weatherState.audioEnabled = !weatherState.audioEnabled;
 		updateAudioState();
 		updateButtonState(audioBtn, weatherState.audioEnabled);
@@ -569,14 +580,291 @@ function weatherShowFn(data) {
 		text(data.weather[0].description);
 	$('#wind-speed').
 		html(`Wind Speed: ${data.wind.speed} m/s`);
-    $('#city-input-btn').on('click', function () {
-    let cityName = $('#city-input').val();
-    if (cityName) {
-        weatherFn(cityName);
-    } else {
-        alert("Please enter a city name.");
-    }
-});
 
 	$('#weather-info').fadeIn();
+}
+
+// ------------------ Flappy Cloud implementation ------------------
+// Configuration: you can set `pipeImageSrc` to a URL of a pipe texture.
+// By default use the sample SVG we added to the repo.
+// Use layered pipe images (back + front) for better depth
+const pipeImageSrc = '../Images/pipes/pipe_back.svg';
+const pipeFrontImageSrc = '../Images/pipes/pipe_front.svg';
+
+function startFlappy() {
+	// reset state
+	flappy.pipes = [];
+	flappy.frameCount = 0;
+	flappy.score = 0;
+	flappy.velocity = 0;
+	flappy.cloudY = flappy.height / 2;
+	flappy.running = true;
+	// state machine: 'happy' (initial), 'veryhappy' (after 20 passes)
+	flappy.state = 'happy';
+	flappy.totalPassed = 0;
+	flappy.invulnerable = false;
+	flappy._invulTimeout = null;
+
+	$('#game-area').addClass('flappy');
+	$('#game-area').empty();
+	$('#game-score').text('Score: 0');
+	const best = getBestScore('flappy');
+	$('#best-score').text('Best: ' + (best === null ? 0 : best));
+
+	// create canvas
+	const canvas = document.createElement('canvas');
+	canvas.width = flappy.width;
+	canvas.height = flappy.height;
+	canvas.style.background = 'linear-gradient(#87CEEB,#B0E0E6)';
+	canvas.style.display = 'block';
+	canvas.style.margin = '0 auto';
+	$('#game-area').append(canvas);
+	flappy.canvas = canvas;
+	flappy.ctx = canvas.getContext('2d');
+
+	// load cloud images
+	flappy.cloudImgs = {
+		happy: new Image(),
+		sad: new Image(),
+		veryhappy: new Image()
+	};
+	flappy.cloudImgs.happy.src = '../Images/clouds/happycloud.svg';
+	flappy.cloudImgs.sad.src = '../Images/clouds/sadcloud.svg';
+	flappy.cloudImgs.veryhappy.src = '../Images/clouds/veryhappycloud.svg';
+	flappy.currentImg = flappy.cloudImgs.happy;
+	// cloud drawing size (smaller) and collision inset
+	flappy.cloudDrawW = 42;
+	flappy.cloudDrawH = 36;
+	flappy.collisionInset = 8; // shrink collision box by inset on each side
+	flappy.gameOver = false;
+	flappy._blink = false;
+	flappy.groundHeight = 26;
+
+	// optional pipe image
+	if (pipeImageSrc) {
+		flappy.pipeBackImg = new Image();
+		flappy.pipeBackImg.src = pipeImageSrc;
+	}
+	if (pipeFrontImageSrc) {
+		flappy.pipeFrontImg = new Image();
+		flappy.pipeFrontImg.src = pipeFrontImageSrc;
+	}
+
+	// input handlers
+	function flapHandler(e) {
+		flappy.velocity = flappy.lift;
+		e && e.preventDefault && e.preventDefault();
+	}
+	canvas.addEventListener('mousedown', flapHandler);
+	canvas.addEventListener('touchstart', flapHandler);
+	flappy._keydownHandler = function (e) {
+		if (e.code === 'Space' || e.key === ' ') flapHandler(e);
+	};
+	document.addEventListener('keydown', flappy._keydownHandler);
+
+	// start loop
+	function loop() {
+		if (!flappy.running) return;
+		flappy.loopId = requestAnimationFrame(loop);
+		updateFlappy();
+		drawFlappy();
+	}
+	loop();
+}
+
+function stopFlappy() {
+	flappy.running = false;
+	if (flappy.loopId) cancelAnimationFrame(flappy.loopId);
+	// remove canvas and handlers
+	if (flappy.canvas) {
+		try { flappy.canvas.remove(); } catch (e) { }
+		flappy.canvas = null;
+		flappy.ctx = null;
+	}
+	if (flappy._keydownHandler) {
+		try { document.removeEventListener('keydown', flappy._keydownHandler); } catch (e) { }
+		flappy._keydownHandler = null;
+	}
+}
+
+function updateFlappy() {
+	// if gameOver, freeze physics/spawning but keep drawing so user sees final state
+	if (flappy.gameOver) return;
+	// physics
+	flappy.velocity += flappy.gravity;
+	flappy.cloudY += flappy.velocity;
+	// ceiling clamp
+	if (flappy.cloudY < 0) {
+		flappy.cloudY = 0;
+		flappy.velocity = 0;
+	}
+	const cloudH = flappy.cloudDrawH;
+	const groundY = flappy.height - (flappy.groundHeight || 26);
+	if (flappy.cloudY + cloudH > groundY) {
+		// hit ground
+		handleFlappyCollision('ground');
+	}
+
+	// spawn pipes
+	flappy.frameCount++;
+	if (flappy.frameCount % 90 === 0) {
+		const topH = 40 + Math.floor(Math.random() * (flappy.height - flappy.pipeGap - 80));
+		flappy.pipes.push({ x: flappy.width, top: topH, passed: false });
+	}
+
+	// move pipes and check score
+	for (let i = flappy.pipes.length - 1; i >= 0; i--) {
+		const p = flappy.pipes[i];
+		p.x -= 2.5;
+		// passed check
+			if (!p.passed && (p.x + flappy.pipeWidth) < flappy.cloudX) {
+				p.passed = true;
+				// increment total passed and score depending on state
+				flappy.totalPassed = (flappy.totalPassed || 0) + 1;
+				if (flappy.state === 'happy') {
+					flappy.score += 1;
+				} else if (flappy.state === 'veryhappy') {
+					flappy.score += 2;
+				}
+				// transition to veryhappy after 20 passed
+				if (flappy.totalPassed >= 20 && flappy.state !== 'veryhappy') {
+					flappy.state = 'veryhappy';
+					flappy.currentImg = flappy.cloudImgs.veryhappy;
+				}
+				$('#game-score').text('Score: ' + flappy.score);
+				$('#best-score').text('Best: ' + (getBestScore('flappy') === null ? 0 : getBestScore('flappy')));
+			}
+		// remove off-screen
+		if (p.x + flappy.pipeWidth < -50) flappy.pipes.splice(i, 1);
+		// collision detection (AABB) using smaller collision rect (inset)
+		const cloudW = flappy.cloudDrawW;
+		const cloudH2 = flappy.cloudDrawH;
+		const cloudRect = {
+			x: flappy.cloudX + flappy.collisionInset,
+			y: flappy.cloudY + flappy.collisionInset,
+			w: Math.max(8, cloudW - flappy.collisionInset * 2),
+			h: Math.max(8, cloudH2 - flappy.collisionInset * 2)
+		};
+		const topRect = { x: p.x, y: 0, w: flappy.pipeWidth, h: p.top };
+		const bottomRect = { x: p.x, y: p.top + flappy.pipeGap, w: flappy.pipeWidth, h: flappy.height - (p.top + flappy.pipeGap) };
+		if (!flappy.invulnerable && rectsOverlap(cloudRect, topRect)) {
+			handleFlappyCollision('pipe');
+		}
+		if (!flappy.invulnerable && rectsOverlap(cloudRect, bottomRect)) {
+			handleFlappyCollision('pipe');
+		}
+	}
+}
+
+function handleFlappyCollision(type) {
+	// if currently invulnerable, ignore collisions
+	if (flappy.invulnerable) return;
+
+	// If we're in veryhappy state, a collision downgrades to happy and grants 3s invulnerability
+	if (flappy.state === 'veryhappy') {
+		flappy.state = 'happy';
+		flappy.currentImg = flappy.cloudImgs.happy;
+		flappy.invulnerable = true;
+		flappy._blink = false;
+		// clear any previous timeout
+		if (flappy._invulTimeout) clearTimeout(flappy._invulTimeout);
+		// start flashing for 3 seconds
+		const start = Date.now();
+		flappy._blinkInterval = setInterval(() => {
+			if (!flappy.ctx) return clearInterval(flappy._blinkInterval);
+			flappy._blink = !flappy._blink;
+		}, 150);
+		flappy._invulTimeout = setTimeout(() => {
+			if (flappy._blinkInterval) clearInterval(flappy._blinkInterval);
+			flappy.invulnerable = false;
+			flappy._blink = false;
+			flappy._invulTimeout = null;
+			flappy._blinkInterval = null;
+		}, 3000);
+		return;
+	}
+
+	// Otherwise (state is 'happy' or invulnerability expired) -> game over
+	flappy.currentImg = flappy.cloudImgs.sad;
+	flappy.gameOver = true;
+	flappy.running = true; // keep drawing so final frame is visible
+	// persist best
+	const stored = getBestScore('flappy');
+	if (stored === null) setBestScore('flappy', flappy.score);
+	else if (flappy.score > stored) setBestScore('flappy', flappy.score);
+}
+
+function rectsOverlap(a, b) {
+	return !(a.x + a.w < b.x || a.x > b.x + b.w || a.y + a.h < b.y || a.y > b.y + b.h);
+}
+
+function drawFlappy() {
+	const ctx = flappy.ctx;
+	if (!ctx) return;
+	ctx.clearRect(0, 0, flappy.width, flappy.height);
+	// richer background: vertical gradient sky + subtle distant hills + layered clouds
+	const skyGrad = ctx.createLinearGradient(0, 0, 0, flappy.height);
+	skyGrad.addColorStop(0, '#a6e0ff');
+	skyGrad.addColorStop(0.6, '#dbefff');
+	skyGrad.addColorStop(1, '#f7fdff');
+	ctx.fillStyle = skyGrad;
+	ctx.fillRect(0, 0, flappy.width, flappy.height);
+	// distant hills
+	ctx.fillStyle = '#c7e6d9';
+	if (flappy._invulTimeout) {
+		clearTimeout(flappy._invulTimeout);
+		flappy._invulTimeout = null;
+	}
+	if (flappy._blinkInterval) {
+		clearInterval(flappy._blinkInterval);
+		flappy._blinkInterval = null;
+	}
+	ctx.beginPath(); ctx.ellipse(120, flappy.height - 40, 260, 60, 0, Math.PI, 2*Math.PI); ctx.fill();
+	ctx.fillStyle = '#b8dfc9';
+	ctx.beginPath(); ctx.ellipse(380, flappy.height - 30, 220, 52, 0, Math.PI, 2*Math.PI); ctx.fill();
+	// ground strip
+	const groundH = 26;
+	ctx.fillStyle = '#6bb45a';
+	ctx.fillRect(0, flappy.height - groundH, flappy.width, groundH);
+	// small grass strokes
+	ctx.fillStyle = '#4f8b3f';
+	for (let gx = 0; gx < flappy.width; gx += 14) {
+		ctx.fillRect(gx + 6, flappy.height - groundH, 2, 8);
+	}
+	// layered decorative clouds (parallax feel)
+	ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.beginPath(); ctx.ellipse(110,50,46,20,0,0,Math.PI*2); ctx.fill();
+	ctx.beginPath(); ctx.ellipse(170,70,36,16,0,0,Math.PI*2); ctx.fill();
+	ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.ellipse(300,40,34,14,0,0,Math.PI*2); ctx.fill();
+
+	// draw pipes
+	for (const p of flappy.pipes) {
+		if (flappy.pipeBackImg) {
+			ctx.drawImage(flappy.pipeBackImg, p.x - 4, 0, flappy.pipeWidth + 8, p.top);
+			ctx.drawImage(flappy.pipeBackImg, p.x - 4, p.top + flappy.pipeGap, flappy.pipeWidth + 8, flappy.height - (p.top + flappy.pipeGap));
+		} else {
+			ctx.fillStyle = '#2e8b57';
+			ctx.fillRect(p.x, 0, flappy.pipeWidth, p.top);
+			ctx.fillRect(p.x, p.top + flappy.pipeGap, flappy.pipeWidth, flappy.height - (p.top + flappy.pipeGap));
+		}
+		// draw front overlay
+		if (flappy.pipeFrontImg) {
+			ctx.drawImage(flappy.pipeFrontImg, p.x, 0, flappy.pipeWidth, p.top);
+			ctx.drawImage(flappy.pipeFrontImg, p.x, p.top + flappy.pipeGap, flappy.pipeWidth, flappy.height - (p.top + flappy.pipeGap));
+		}
+	}
+	// draw cloud (blink if invulnerable)
+	const img = flappy.currentImg || flappy.cloudImgs.happy;
+	const cloudW = flappy.cloudDrawW, cloudH = flappy.cloudDrawH;
+	if (!flappy._blink) ctx.globalAlpha = 1.0;
+	else ctx.globalAlpha = 0.25;
+	try { ctx.drawImage(img, flappy.cloudX, flappy.cloudY, cloudW, cloudH); } catch (e) { /* ignore until image loads */ }
+	ctx.globalAlpha = 1.0;
+
+	// if gameOver, draw GAME OVER text above the score area
+	if (flappy.gameOver) {
+		ctx.fillStyle = 'rgba(0,0,0,0.7)';
+		ctx.font = 'bold 28px Arial';
+		ctx.textAlign = 'center';
+		ctx.fillText('GAME OVER', flappy.width / 2, 32);
+	}
 }

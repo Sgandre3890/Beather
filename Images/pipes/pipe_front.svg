@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="256" viewBox="0 0 64 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gfront" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#8fd06e"/>
+      <stop offset="100%" stop-color="#66b24b"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="0" width="48" height="256" rx="8" ry="8" fill="url(#gfront)" stroke="#3a7a3a" stroke-width="2"/>
+  <ellipse cx="32" cy="16" rx="22" ry="8" fill="#b5f09a" opacity="0.9"/>
+</svg>
