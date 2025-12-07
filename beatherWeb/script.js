@@ -13,6 +13,27 @@ function getBestScore(game) {
 function setBestScore(game, score) {
 	localStorage.setItem('beather_best_score_' + game, score);
 }
+
+// Update displayed score and persist best score immediately when surpassed
+function updateScoreAndBest(game, currentScore) {
+	if (game === 'sunny') {
+		gameScore = currentScore;
+		$('#game-score').text('Score: ' + gameScore);
+	} else if (game === 'flappy') {
+		flappy.score = currentScore;
+		$('#game-score').text('Score: ' + flappy.score);
+	}
+	const stored = getBestScore(game);
+	if (stored === null) {
+		// first run: set and show so player sees a target
+		setBestScore(game, currentScore);
+		$('#best-score').text('Best: ' + currentScore);
+	} else if (currentScore > stored) {
+		// player surpassed stored best during play — update immediately
+		setBestScore(game, currentScore);
+		$('#best-score').text('Best: ' + currentScore);
+	}
+}
 // click timestamps for sun clicks
 let sunClickTimestamps = [];
 // frenzy state
@@ -40,7 +61,11 @@ let flappy = {
 	velocity: 0,
 	// stronger gravity for more challenge; smaller lift so clicks produce smaller hops
 	gravity: 0.45,
-	lift: -1.8,
+	// increase lift so the cloud can actually clear pipes when player clicks
+	lift: -4.2,
+	// per-game tunables
+	pipeSpeed: 3.8,
+	spawnRate: 75,
 	pipes: [],
 	pipeGap: 120,
 	pipeWidth: 52,
@@ -131,14 +156,15 @@ function spawnGameIcons() {
 		if (!gameActive || gameTime <= 0) return;
 		// If frenzy active, every click gives +1
 		if (frenzyActive) {
-			gameScore += 1;
-			$('#game-score').text('Score: ' + gameScore + ' (FRENZY)');
+				gameScore += 1;
+				updateScoreAndBest('sunny', gameScore);
+				$('#game-score').text('Score: ' + gameScore + ' (FRENZY)');
 			spawnGameIcons();
 			return;
 		}
 		// Normal behavior: add sun points and record timestamp
-		gameScore += gameIcons[0].points;
-		$('#game-score').text('Score: ' + gameScore);
+			gameScore += gameIcons[0].points;
+			updateScoreAndBest('sunny', gameScore);
 		const now = Date.now();
 		sunClickTimestamps.push(now);
 		// Count within 5s and 10s windows
@@ -192,12 +218,13 @@ function spawnGameIcons() {
 			if (!gameActive || gameTime <= 0) return;
 			if (frenzyActive) {
 				gameScore += 1; // any click adds during frenzy
+				updateScoreAndBest('sunny', gameScore);
 				$('#game-score').text('Score: ' + gameScore + ' (FRENZY)');
 				spawnGameIcons();
 				return;
 			}
 			gameScore += iconData.points;
-			$('#game-score').text('Score: ' + gameScore);
+			updateScoreAndBest('sunny', gameScore);
 			spawnGameIcons();
 		});
 		area.append(icon);
@@ -707,15 +734,20 @@ function updateFlappy() {
 
 	// spawn pipes
 	flappy.frameCount++;
-	if (flappy.frameCount % 90 === 0) {
-		const topH = 40 + Math.floor(Math.random() * (flappy.height - flappy.pipeGap - 80));
-		flappy.pipes.push({ x: flappy.width, top: topH, passed: false });
+	if (flappy.frameCount % (flappy.spawnRate || 75) === 0) {
+		// choose a random gap per-pipe constrained by cloud size and canvas
+		const minGap = Math.max(Math.floor(flappy.cloudDrawH * 1.2), 48);
+		const maxGap = Math.min(Math.floor(flappy.cloudDrawH * 5), flappy.height - 120);
+		const gap = Math.max(minGap, Math.floor(minGap + Math.random() * Math.max(1, maxGap - minGap)));
+		// top height must leave room for gap and margins
+		const topH = 20 + Math.floor(Math.random() * Math.max(1, flappy.height - gap - 80));
+		flappy.pipes.push({ x: flappy.width, top: topH, gap: gap, passed: false });
 	}
 
 	// move pipes and check score
 	for (let i = flappy.pipes.length - 1; i >= 0; i--) {
 		const p = flappy.pipes[i];
-		p.x -= 2.5;
+		p.x -= (flappy.pipeSpeed || 3.8);
 		// passed check
 			if (!p.passed && (p.x + flappy.pipeWidth) < flappy.cloudX) {
 				p.passed = true;
@@ -731,8 +763,8 @@ function updateFlappy() {
 					flappy.state = 'veryhappy';
 					flappy.currentImg = flappy.cloudImgs.veryhappy;
 				}
-				$('#game-score').text('Score: ' + flappy.score);
-				$('#best-score').text('Best: ' + (getBestScore('flappy') === null ? 0 : getBestScore('flappy')));
+				// update score display and best immediately
+				updateScoreAndBest('flappy', flappy.score);
 			}
 		// remove off-screen
 		if (p.x + flappy.pipeWidth < -50) flappy.pipes.splice(i, 1);
@@ -746,7 +778,7 @@ function updateFlappy() {
 			h: Math.max(8, cloudH2 - flappy.collisionInset * 2)
 		};
 		const topRect = { x: p.x, y: 0, w: flappy.pipeWidth, h: p.top };
-		const bottomRect = { x: p.x, y: p.top + flappy.pipeGap, w: flappy.pipeWidth, h: flappy.height - (p.top + flappy.pipeGap) };
+		const bottomRect = { x: p.x, y: p.top + (p.gap || flappy.pipeGap), w: flappy.pipeWidth, h: flappy.height - (p.top + (p.gap || flappy.pipeGap)) };
 		if (!flappy.invulnerable && rectsOverlap(cloudRect, topRect)) {
 			handleFlappyCollision('pipe');
 		}
@@ -838,18 +870,19 @@ function drawFlappy() {
 
 	// draw pipes
 	for (const p of flappy.pipes) {
+		const gap = p.gap || flappy.pipeGap;
 		if (flappy.pipeBackImg) {
 			ctx.drawImage(flappy.pipeBackImg, p.x - 4, 0, flappy.pipeWidth + 8, p.top);
-			ctx.drawImage(flappy.pipeBackImg, p.x - 4, p.top + flappy.pipeGap, flappy.pipeWidth + 8, flappy.height - (p.top + flappy.pipeGap));
+			ctx.drawImage(flappy.pipeBackImg, p.x - 4, p.top + gap, flappy.pipeWidth + 8, flappy.height - (p.top + gap));
 		} else {
 			ctx.fillStyle = '#2e8b57';
 			ctx.fillRect(p.x, 0, flappy.pipeWidth, p.top);
-			ctx.fillRect(p.x, p.top + flappy.pipeGap, flappy.pipeWidth, flappy.height - (p.top + flappy.pipeGap));
+			ctx.fillRect(p.x, p.top + gap, flappy.pipeWidth, flappy.height - (p.top + gap));
 		}
 		// draw front overlay
 		if (flappy.pipeFrontImg) {
 			ctx.drawImage(flappy.pipeFrontImg, p.x, 0, flappy.pipeWidth, p.top);
-			ctx.drawImage(flappy.pipeFrontImg, p.x, p.top + flappy.pipeGap, flappy.pipeWidth, flappy.height - (p.top + flappy.pipeGap));
+			ctx.drawImage(flappy.pipeFrontImg, p.x, p.top + gap, flappy.pipeWidth, flappy.height - (p.top + gap));
 		}
 	}
 	// draw cloud (blink if invulnerable)
