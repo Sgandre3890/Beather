@@ -736,7 +736,7 @@ function updateFlappy() {
 	flappy.frameCount++;
 	if (flappy.frameCount % (flappy.spawnRate || 75) === 0) {
 		// choose a random gap per-pipe constrained by cloud size and canvas
-		const minGap = Math.max(Math.floor(flappy.cloudDrawH * 1.2), 48);
+		const minGap = Math.max(Math.floor(flappy.cloudDrawH * 1.5), 48);
 		const maxGap = Math.min(Math.floor(flappy.cloudDrawH * 5), flappy.height - 120);
 		const gap = Math.max(minGap, Math.floor(minGap + Math.random() * Math.max(1, maxGap - minGap)));
 		// top height must leave room for gap and margins
@@ -792,29 +792,25 @@ function handleFlappyCollision(type) {
 	// if currently invulnerable, ignore collisions
 	if (flappy.invulnerable) return;
 
-	// If we're in veryhappy state, a collision downgrades to happy and grants 3s invulnerability
 	if (flappy.state === 'veryhappy') {
-		flappy.state = 'happy';
-		flappy.currentImg = flappy.cloudImgs.happy;
-		flappy.invulnerable = true;
-		flappy._blink = false;
-		// clear any previous timeout
-		if (flappy._invulTimeout) clearTimeout(flappy._invulTimeout);
-		// start flashing for 3 seconds
-		const start = Date.now();
-		flappy._blinkInterval = setInterval(() => {
-			if (!flappy.ctx) return clearInterval(flappy._blinkInterval);
-			flappy._blink = !flappy._blink;
-		}, 150);
-		flappy._invulTimeout = setTimeout(() => {
-			if (flappy._blinkInterval) clearInterval(flappy._blinkInterval);
-			flappy.invulnerable = false;
-			flappy._blink = false;
-			flappy._invulTimeout = null;
-			flappy._blinkInterval = null;
-		}, 3000);
-		return;
-	}
+    flappy.state = 'happy';
+    flappy.currentImg = flappy.cloudImgs.happy;
+
+    if (flappy._invulTimeout) {
+        clearTimeout(flappy._invulTimeout);
+        flappy._invulTimeout = null;
+    }
+    if (flappy._blinkInterval) {
+        clearInterval(flappy._blinkInterval);
+        flappy._blinkInterval = null;
+    }
+
+    flappy.invulnerable = false;
+    flappy._blink = false;
+
+    return;
+}
+
 
 	// Otherwise (state is 'happy' or invulnerability expired) -> game over
 	flappy.currentImg = flappy.cloudImgs.sad;
