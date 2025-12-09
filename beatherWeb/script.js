@@ -286,7 +286,8 @@ const weatherThemeMap = {
 };
 
 // Default background and audio (video is now an MP4 loop)
-const defaultTheme = { video: 'background.mp4', audio: 'backgroundmusic.mp3' };
+// Note: audio filename uses capital 'B' per repository: 'Backgroundmusic.mp3'
+const defaultTheme = { video: 'background.mp4', audio: 'Backgroundmusic.mp3' };
 
 // State management
 const weatherState = {
@@ -314,10 +315,14 @@ function initSplashScreen() {
 				try {
 					const videoEl = document.getElementById('weather-video');
 					if (videoEl) {
-						videoEl.classList.remove('hidden');
 						// Ensure defaults are set before playing
 						weatherState.currentVideo = defaultTheme.video;
 						weatherState.currentAudio = defaultTheme.audio;
+						// Show video only when it can play to avoid initial flash
+						videoEl.addEventListener('canplay', function onCanPlay() {
+							videoEl.classList.add('visible');
+							videoEl.removeEventListener('canplay', onCanPlay);
+						});
 						playVideo();
 					} else {
 						// Fallback: leave #page-bg as-is or set a neutral background color
@@ -492,10 +497,14 @@ function playAudio() {
 function updateVideoState() {
 	const videoEl = document.getElementById('weather-video');
 	if (weatherState.backgroundEnabled) {
-		videoEl.classList.remove('hidden');
+		// If video is already loaded enough, show immediately
+		if (videoEl.readyState >= 3) { // HAVE_FUTURE_DATA
+			videoEl.classList.add('visible');
+		}
 		playVideo();
 	} else {
-		videoEl.classList.add('hidden');
+		// Hide video smoothly and pause
+		videoEl.classList.remove('visible');
 		videoEl.pause();
 		weatherState.videoPlaying = false;
 	}
@@ -735,12 +744,22 @@ function updateFlappy() {
 	// spawn pipes
 	flappy.frameCount++;
 	if (flappy.frameCount % (flappy.spawnRate || 75) === 0) {
-		// choose a random gap per-pipe constrained by cloud size and canvas
-		const minGap = Math.max(Math.floor(flappy.cloudDrawH * 1.5), 48);
-		const maxGap = Math.min(Math.floor(flappy.cloudDrawH * 5), flappy.height - 120);
-		const gap = Math.max(minGap, Math.floor(minGap + Math.random() * Math.max(1, maxGap - minGap)));
-		// top height must leave room for gap and margins
-		const topH = 20 + Math.floor(Math.random() * Math.max(1, flappy.height - gap - 80));
+		// Normalize pipe gap: consistent bounds and slight tightening over progress
+		const progressFactor = Math.min(1, (flappy.totalPassed || 0) / 40); // 0..1
+		const baseMinGap = Math.max(Math.floor(flappy.cloudDrawH * 2.0), 64);
+		const baseMaxGap = Math.min(Math.floor(flappy.cloudDrawH * 3.5), flappy.height - 140);
+		// reduce max gap as player progresses, but never below min
+		const dynamicMaxGap = Math.max(baseMinGap + 10, Math.floor(baseMaxGap - progressFactor * 40));
+		const minGap = baseMinGap;
+		const maxGap = dynamicMaxGap;
+		const gapRange = Math.max(1, maxGap - minGap);
+		const gap = Math.floor(minGap + Math.random() * gapRange);
+
+		// Ensure top height leaves enough space for gap and margins
+		const safeMarginTop = 24;
+		const safeMarginBottom = 24;
+		const maxTopH = Math.max(20, flappy.height - (gap + safeMarginTop + safeMarginBottom));
+		const topH = safeMarginTop + Math.floor(Math.random() * Math.max(1, maxTopH));
 		flappy.pipes.push({ x: flappy.width, top: topH, gap: gap, passed: false });
 	}
 
@@ -893,7 +912,22 @@ function drawFlappy() {
 	const cloudW = flappy.cloudDrawW, cloudH = flappy.cloudDrawH;
 	if (!flappy._blink) ctx.globalAlpha = 1.0;
 	else ctx.globalAlpha = 0.25;
+	// soft glow behind cloud
+	ctx.save();
+	ctx.globalAlpha = 0.25;
+	ctx.fillStyle = '#ffffff';
+	ctx.beginPath();
+	ctx.ellipse(flappy.cloudX + cloudW/2, flappy.cloudY + cloudH/2, cloudW*0.6, cloudH*0.5, 0, 0, Math.PI*2);
+	ctx.fill();
+	ctx.restore();
+	// subtle drop shadow
+	ctx.save();
+	ctx.shadowColor = 'rgba(0,0,0,0.25)';
+	ctx.shadowBlur = 8;
+	ctx.shadowOffsetX = 2;
+	ctx.shadowOffsetY = 3;
 	try { ctx.drawImage(img, flappy.cloudX, flappy.cloudY, cloudW, cloudH); } catch (e) { /* ignore until image loads */ }
+	ctx.restore();
 	ctx.globalAlpha = 1.0;
 
 	// if gameOver, draw GAME OVER text above the score area

@@ -175,11 +175,13 @@ body {
 }
 
 .splash-logo {
-    width: 300px;
-    height: 300px;
-    object-fit: contain;
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    image-rendering: auto;
 }
 
 /* Background video style */
@@ -191,12 +193,12 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: -2;
-    opacity: 1;
+    opacity: 0; /* hidden by default to avoid flash */
     transition: opacity 0.3s ease-in-out;
 }
 
-.weather-video.hidden {
-    opacity: 0;
+.weather-video.visible {
+    opacity: 1; /* shown when media is ready */
 }
 
 /* Static page background container used after splash */
