@@ -793,23 +793,38 @@ function handleFlappyCollision(type) {
 	if (flappy.invulnerable) return;
 
 	if (flappy.state === 'veryhappy') {
-    flappy.state = 'happy';
-    flappy.currentImg = flappy.cloudImgs.happy;
+		// downgrade to happy, grant 3s invulnerability with blinking
+		flappy.state = 'happy';
+		flappy.currentImg = flappy.cloudImgs.happy;
 
-    if (flappy._invulTimeout) {
-        clearTimeout(flappy._invulTimeout);
-        flappy._invulTimeout = null;
-    }
-    if (flappy._blinkInterval) {
-        clearInterval(flappy._blinkInterval);
-        flappy._blinkInterval = null;
-    }
+		// clear any previous timers
+		if (flappy._invulTimeout) {
+			clearTimeout(flappy._invulTimeout);
+			flappy._invulTimeout = null;
+		}
+		if (flappy._blinkInterval) {
+			clearInterval(flappy._blinkInterval);
+			flappy._blinkInterval = null;
+		}
 
-    flappy.invulnerable = false;
-    flappy._blink = false;
+		flappy.invulnerable = true;
+		flappy._blink = false;
+		// start blink interval
+		flappy._blinkInterval = setInterval(() => {
+			if (!flappy.ctx) return clearInterval(flappy._blinkInterval);
+			flappy._blink = !flappy._blink;
+		}, 150);
+		// end invulnerability after 3s
+		flappy._invulTimeout = setTimeout(() => {
+			if (flappy._blinkInterval) clearInterval(flappy._blinkInterval);
+			flappy.invulnerable = false;
+			flappy._blink = false;
+			flappy._invulTimeout = null;
+			flappy._blinkInterval = null;
+		}, 3000);
 
-    return;
-}
+		return;
+	}
 
 
 	// Otherwise (state is 'happy' or invulnerability expired) -> game over
@@ -839,14 +854,6 @@ function drawFlappy() {
 	ctx.fillRect(0, 0, flappy.width, flappy.height);
 	// distant hills
 	ctx.fillStyle = '#c7e6d9';
-	if (flappy._invulTimeout) {
-		clearTimeout(flappy._invulTimeout);
-		flappy._invulTimeout = null;
-	}
-	if (flappy._blinkInterval) {
-		clearInterval(flappy._blinkInterval);
-		flappy._blinkInterval = null;
-	}
 	ctx.beginPath(); ctx.ellipse(120, flappy.height - 40, 260, 60, 0, Math.PI, 2*Math.PI); ctx.fill();
 	ctx.fillStyle = '#b8dfc9';
 	ctx.beginPath(); ctx.ellipse(380, flappy.height - 30, 220, 52, 0, Math.PI, 2*Math.PI); ctx.fill();
