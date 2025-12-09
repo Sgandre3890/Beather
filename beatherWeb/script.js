@@ -267,6 +267,7 @@ $(document).ready(function () {
 });
 const url =
 	'https://api.openweathermap.org/data/2.5/weather';
+const geoUrl = 'https://api.openweathermap.org/geo/1.0/direct';
 const apiKey =
 	'04b2c70f5678cb788cb9d62c0325ef32';
 
@@ -362,10 +363,22 @@ $(document).ready(function () {
 	setTimeout(function () {
 		initControls();
 		// Wire up city input button (use off/on to avoid duplicate handlers)
+		// init language selector from storage
+		const savedLang = localStorage.getItem('beather_lang') || 'en';
+		$('#lang-select').val(savedLang);
+		// apply initial i18n
+		applyI18n(savedLang);
+		$('#lang-select').on('change', function(){
+			const val = $(this).val();
+			localStorage.setItem('beather_lang', val);
+			applyI18n(val);
+		});
+
 		$('#city-input-btn').off('click').on('click', function () {
 			const city = $('#city-input').val().trim();
 			if (city) {
-				weatherFn(city);
+				const langSel = $('#lang-select').val() || 'en';
+				weatherFn(city, { lang: langSel });
 			} else {
 				alert('Please enter a city name.');
 			}
@@ -380,11 +393,12 @@ $(document).ready(function () {
 				btn.addClass('enabled');
 				// attempt geolocation
 				if (navigator.geolocation) {
-					navigator.geolocation.getCurrentPosition(function (pos) {
+						navigator.geolocation.getCurrentPosition(function (pos) {
 						const lat = pos.coords.latitude;
 						const lon = pos.coords.longitude;
 						// Call weather API using lat/lon
-						weatherFn({ lat, lon });
+							const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+							weatherFn({ lat, lon }, { lang: langSel });
 					}, function (err) {
 						alert('Unable to retrieve location: ' + err.message);
 					});
@@ -424,6 +438,73 @@ function initControls() {
 	// Initialize button states
 	updateButtonState(audioBtn, weatherState.audioEnabled);
 	updateButtonState(bgBtn, weatherState.backgroundEnabled);
+}
+
+// --- Lightweight i18n ---
+const i18n = {
+	en: {
+		'nav.home': 'Home',
+		'nav.map': 'Weather Map',
+		'game.choose': 'Choose a Game',
+		'game.sunny.title': 'Sunny Clicker',
+		'game.sunny.desc': 'Click suns, avoid distractors. Frenzy & bonuses included.',
+		'game.flappy.title': 'Flappy Cloud',
+		'game.flappy.desc': "Tap to fly the cloud. Don't hit the ground or the pillars.",
+		'btn.cancel': 'Cancel',
+		'game.title': 'Game',
+		'btn.exit': 'Exit Game',
+		'btn.restart': 'Restart',
+		'btn.getWeather': 'Get Weather',
+		'input.city': 'Enter city name'
+	},
+	zh_cn: {
+		'nav.home': '首页',
+		'nav.map': '天气地图',
+		'game.choose': '选择游戏',
+		'game.sunny.title': '阳光点击',
+		'game.sunny.desc': '点击太阳，避开干扰。含狂热与加成。',
+		'game.flappy.title': '飞云冒险',
+		'game.flappy.desc': '点击使云飞起，别撞到地面或水管。',
+		'btn.cancel': '取消',
+		'game.title': '游戏',
+		'btn.exit': '退出游戏',
+		'btn.restart': '重新开始',
+		'btn.getWeather': '查询天气',
+		'input.city': '输入城市名称'
+	},
+	es: {
+		'nav.home': 'Inicio',
+		'nav.map': 'Mapa del clima',
+		'game.choose': 'Elige un juego',
+		'game.sunny.title': 'Clic del Sol',
+		'game.sunny.desc': 'Haz clic en soles, evita distracciones. Con frenesí y bonificaciones.',
+		'game.flappy.title': 'Nube Voladora',
+		'game.flappy.desc': 'Toca para volar la nube. No choques con el suelo ni los pilares.',
+		'btn.cancel': 'Cancelar',
+		'game.title': 'Juego',
+		'btn.exit': 'Salir del juego',
+		'btn.restart': 'Reiniciar',
+		'btn.getWeather': 'Obtener clima',
+		'input.city': 'Ingresa el nombre de la ciudad'
+	}
+};
+
+function applyI18n(lang) {
+	const dict = i18n[lang] || i18n.en;
+	// text content
+	document.querySelectorAll('[data-i18n]').forEach(el => {
+		const key = el.getAttribute('data-i18n');
+		if (key && dict[key] !== undefined) {
+			el.textContent = dict[key];
+		}
+	});
+	// placeholders
+	document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+		const key = el.getAttribute('data-i18n-placeholder');
+		if (key && dict[key] !== undefined) {
+			el.setAttribute('placeholder', dict[key]);
+		}
+	});
 }
 
 // Update button style
@@ -531,25 +612,36 @@ function updateAudioState() {
 }
 
 // Fetch weather and switch background/audio
-async function weatherFn(query) {
-	let endpoint;
-	if (typeof query === 'string') {
-		endpoint = `${url}?q=${encodeURIComponent(query)}&appid=${apiKey}&units=imperial`;
-	} else if (query && query.lat !== undefined && query.lon !== undefined) {
-		endpoint = `${url}?lat=${query.lat}&lon=${query.lon}&appid=${apiKey}&units=imperial`;
-	} else {
-		console.error('Invalid weather query:', query);
-		return;
-	}
+async function weatherFn(query, options = {}) {
+	// language code (e.g., 'en', 'zh_cn', 'es'); default to browser language
+	const lang = options.lang || (navigator.language ? navigator.language.toLowerCase().replace('-', '_') : 'en');
 
+	let coords = null;
 	try {
+		if (typeof query === 'string') {
+			// Resolve city name in any language using geocoding API
+			const geoEndpoint = `${geoUrl}?q=${encodeURIComponent(query)}&limit=1&appid=${apiKey}`;
+			const gres = await fetch(geoEndpoint);
+			const gdata = await gres.json();
+			if (Array.isArray(gdata) && gdata.length > 0) {
+				coords = { lat: gdata[0].lat, lon: gdata[0].lon };
+			} else {
+				alert('City not found. Please try again.');
+				return;
+			}
+		} else if (query && query.lat !== undefined && query.lon !== undefined) {
+			coords = { lat: query.lat, lon: query.lon };
+		} else {
+			console.error('Invalid weather query:', query);
+			return;
+		}
+
+		const endpoint = `${url}?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}&units=imperial&lang=${encodeURIComponent(lang)}`;
 		const res = await fetch(endpoint);
 		const data = await res.json();
 		if (res.ok) {
-			// Get weather main category and switch background/audio
 			const weatherMain = data.weather[0].main.toLowerCase();
 			switchWeatherTheme(weatherMain);
-
 			weatherShowFn(data);
 		} else {
 			alert('City not found. Please try again.');

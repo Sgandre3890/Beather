@@ -30,17 +30,17 @@
 	<!-- Game selection menu -->
 	<div id="game-menu" class="hidden">
 		<div class="game-menu-content">
-			<h2>Choose a Game</h2>
+			<h2 data-i18n="game.choose">Choose a Game</h2>
 			<div class="game-list">
 			<div class="game-card" data-game="sunny">
 				<img src="../Images/WebAssets/SunnyIcon.svg" alt="Sunny Clicker" />
-				<div class="game-card-title">Sunny Clicker</div>
-					<div class="game-card-desc">Click suns, avoid distractors. Frenzy & bonuses included.</div>
+				<div class="game-card-title" data-i18n="game.sunny.title">Sunny Clicker</div>
+					<div class="game-card-desc" data-i18n="game.sunny.desc">Click suns, avoid distractors. Frenzy & bonuses included.</div>
 				</div>
 			<div class="game-card" data-game="flappy">
 				<img src="../Images/clouds/funnycloud.png" alt="Flappy Cloud" />
-				<div class="game-card-title">Flappy Cloud</div>
-					<div class="game-card-desc">Tap to fly the cloud. Don't hit the ground or the pillars.</div>
+				<div class="game-card-title" data-i18n="game.flappy.title">Flappy Cloud</div>
+					<div class="game-card-desc" data-i18n="game.flappy.desc">Tap to fly the cloud. Don't hit the ground or the pillars.</div>
 				</div>
 			</div>
 			<button id="game-menu-cancel" class="menu-btn">Cancel</button>
@@ -73,7 +73,7 @@
 
 	<!-- Control buttons (bottom-right) -->
 	<div class="controls">
-		<div style="display: flex; gap: 8px;">
+		<div style="display: flex; gap: 8px; align-items: center;">
 			<button id="gamepad-btn" class="control-btn gamepad-btn" title="Play Game">
 				<i class="fas fa-gamepad"></i>
 			</button>
@@ -86,13 +86,19 @@
 			<button id="toggle-background" class="control-btn bg-btn" title="Toggle Background">
 				<i class="fas fa-image"></i>
 			</button>
+			<!-- Language selector -->
+			<select id="lang-select" title="Language" style="height: 34px; border-radius: 8px; padding: 4px 8px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+				<option value="en">English</option>
+				<option value="zh_cn">中文</option>
+				<option value="es">Español</option>
+			</select>
 		</div>
 		<!-- Note: removed separate enable-sound button; audio enable is merged into the audio toggle button. -->
 	</div>
 
 	<nav>
-    <a href="index.html">Home</a>
-    <a href="map.html">Weather Map</a>
+	<a href="index.html" data-i18n="nav.home">Home</a>
+	<a href="map.html" data-i18n="nav.map">Weather Map</a>
   	</nav>
 
 	<div class="container">
