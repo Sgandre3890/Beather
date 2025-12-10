@@ -785,8 +785,15 @@ function startFlappy() {
 	}
 	canvas.addEventListener('mousedown', flapHandler);
 	canvas.addEventListener('touchstart', flapHandler);
+	// Only trigger flap when the Flappy game is active to avoid interfering with page inputs
 	flappy._keydownHandler = function (e) {
-		if (e.code === 'Space' || e.key === ' ') flapHandler(e);
+		// Ensure game overlay is active and Flappy is the selected game
+		if (!gameActive || activeGame !== 'flappy' || !flappy.running) return;
+		if (e.code === 'Space' || e.key === ' ') {
+			// prevent default (page scroll / button activation) and flap
+			try { e.preventDefault(); } catch (err) { /* ignore */ }
+			flapHandler(e);
+		}
 	};
 	document.addEventListener('keydown', flappy._keydownHandler);
 
