@@ -4,24 +4,33 @@
   <title>Weather Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    /* Keep original full-screen map look */
+    #map { width: 100vw; height: 100vh; }
+  </style>
+  
 </head>
 <body>
   <nav>
-    <a href="index.html">Home</a>
-    <a href="map.html">Weather Map</a>
+    <a href="index.html" data-i18n="nav.home">Home</a>
+    <a href="map.html" data-i18n="nav.map">Weather Map</a>
   </nav>
 
-  <div id="map" style="height: 95vh;"></div>
-  <script>
-    var map = L.map('map').setView([40.7608, -111.8910], 6);
+  <div id="map"></div>
 
+  <script>
+    // Original immediate initialization
+    var map = L.map('map').setView([40.7608, -111.8910], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
       attribution: '© OpenWeatherMap',
-      opacity: 0.5,
+      opacity: 0.5
     }).addTo(map);
   </script>
 </body>

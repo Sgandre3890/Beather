@@ -74,32 +74,24 @@
 	<!-- Control buttons (bottom-right) -->
 	<div class="controls">
 		<div style="display: flex; gap: 8px; align-items: center;">
+			<button id="settings-btn" class="control-btn settings-btn" title="Settings">
+				<i class="fas fa-cog"></i>
+			</button>
 			<button id="gamepad-btn" class="control-btn gamepad-btn" title="Play Game">
 				<i class="fas fa-gamepad"></i>
 			</button>
-			<button id="detect-location" class="control-btn location-btn" title="Detect Location">
-				<i class="fas fa-map-marker-alt"></i>
-			</button>
-			<button id="toggle-audio" class="control-btn audio-btn" title="Toggle Audio">
-				<i class="fas fa-volume-up"></i>
-			</button>
-			<button id="toggle-background" class="control-btn bg-btn" title="Toggle Background">
-				<i class="fas fa-image"></i>
-			</button>
-			<!-- Language selector -->
-			<select id="lang-select" title="Language" style="height: 34px; border-radius: 8px; padding: 4px 8px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
-				<option value="en">English</option>
-				<option value="zh_cn">中文</option>
-				<option value="es">Español</option>
-			</select>
 		</div>
 		<!-- Note: removed separate enable-sound button; audio enable is merged into the audio toggle button. -->
 	</div>
 
-	<nav>
-	<a href="index.html" data-i18n="nav.home">Home</a>
-	<a href="map.html" data-i18n="nav.map">Weather Map</a>
-  	</nav>
+			<nav>
+				<a href="index.html" title="Home">
+					<img src="../Images/Home.png" alt="Home" data-i18n="nav.home" />
+				</a>
+				<a href="map.html" title="Weather Map">
+					<img src="../Images/map.png" alt="Weather Map" data-i18n="nav.map" />
+				</a>
+			</nav>
 
 	<div class="container">
 		<div class="weather-card">
@@ -112,8 +104,7 @@
 			</h3>
 			<input type="text" id="city-input"
 				placeholder="Enter city name" data-i18n-placeholder="input.city">
-			<button id="city-input-btn"
-					onclick="weatherFn($('#city-input').val())" data-i18n="btn.getWeather">
+						<button id="city-input-btn" data-i18n="btn.getWeather">
 					Get Weather
 			</button>
 			<div id="weather-info"
@@ -127,9 +118,75 @@
 		</div>
 	</div>
 	<script src=
-"https://momentjs.com/downloads/moment.min.js">
+"https://momentjs.com/downloads/moment-with-locales.min.js">
 	</script>
 	<script src="script.js"></script>
+
+	<!-- Settings Modal -->
+	<div id="settings-modal" class="settings-modal hidden">
+		<div class="settings-content">
+			<h2 data-i18n="settings.title">Settings</h2>
+			<div class="settings-section">
+				<h3 data-i18n="settings.media">Media</h3>
+				<label class="settings-row">
+					<input type="checkbox" id="set-audio-enabled" />
+					<span data-i18n="settings.audio">Enable Audio</span>
+				</label>
+				<label class="settings-row">
+					<input type="checkbox" id="set-video-enabled" />
+					<span data-i18n="settings.video">Enable Background Video</span>
+				</label>
+				<label class="settings-row">
+					<span data-i18n="settings.volume">Volume</span>
+					<input type="range" id="set-volume" min="0" max="100" step="1" style="width:180px;margin-left:10px;" />
+				</label>
+				<label class="settings-row">
+					<span data-i18n="settings.display">Display</span>
+					<label style="margin-left:10px;"><input type="radio" name="display-mode" id="set-display-temp" checked /> <span data-i18n="btn.showTemp">Show Temperature</span></label>
+					<label style="margin-left:10px;"><input type="radio" name="display-mode" id="set-display-wind" /> <span data-i18n="btn.showWind">Show Wind</span></label>
+				</label>
+			</div>
+
+			<div class="settings-section">
+				<h3 data-i18n="settings.localization">Localization</h3>
+				<label class="settings-row">
+					<span data-i18n="ctrl.language">Language</span>
+					<select id="set-language" style="margin-left:10px;">
+						<option value="en">English</option>
+						<option value="zh_cn">中文</option>
+						<option value="es">Español</option>
+					</select>
+				</label>
+				<label class="settings-row">
+					<span data-i18n="units.title">Units</span>
+					<select id="set-units" style="margin-left:10px;">
+						<option value="auto" data-i18n="units.auto">Auto</option>
+						<option value="metric" data-i18n="units.metric">Metric (°C, m/s)</option>
+						<option value="imperial" data-i18n="units.imperial">Imperial (°F, mph)</option>
+					</select>
+				</label>
+			</div>
+
+			<div class="settings-section">
+				<h3 data-i18n="settings.location">Location</h3>
+				<label class="settings-row">
+					<input type="checkbox" id="set-auto-detect" />
+					<span data-i18n="settings.autoDetect">Auto detect location</span>
+					<button id="set-detect-now" class="mini-btn" style="margin-left:10px;" data-i18n="settings.detectNow">Detect Now</button>
+				</label>
+				<label class="settings-row">
+					<span data-i18n="settings.manualCity">Manual city</span>
+					<input id="set-manual-city" type="text" data-i18n-placeholder="input.city" placeholder="Enter city name" style="margin-left:10px;" />
+					<button id="set-fetch-city" class="mini-btn" style="margin-left:10px;" data-i18n="settings.fetchWeather">Fetch Weather</button>
+				</label>
+			</div>
+
+			<div class="settings-actions">
+				<button id="settings-cancel" class="menu-btn" data-i18n="btn.cancel">Cancel</button>
+				<button id="settings-save" class="menu-btn primary" data-i18n="settings.save">Save</button>
+			</div>
+		</div>
+	</div>
 </body>
 
 </html>

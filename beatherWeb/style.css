@@ -138,6 +138,23 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     transition: background 0.2s;
 }
+#settings-btn {
+    background-color: rgba(96, 125, 139, 0.92);
+    color: #fff;
+    font-size: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+#settings-btn:hover { background-color: rgba(69, 90, 100, 0.98); }
+
+/* Settings modal */
+.settings-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2600; }
+.settings-modal.hidden { display: none; }
+.settings-content { background:#fff; border-radius:16px; padding:24px; width: 520px; max-width: 90vw; box-shadow:0 12px 32px rgba(0,0,0,0.25); }
+.settings-section { margin-top: 12px; }
+.settings-row { display:flex; align-items:center; margin:8px 0; }
+.settings-actions { display:flex; justify-content:flex-end; gap:10px; margin-top: 18px; }
+.settings-actions .primary { background:#2196F3; color:#fff; }
+.mini-btn { padding:6px 10px; border-radius:6px; border:none; background:#e0e0e0; cursor:pointer; }
 #gamepad-btn:hover {
     background-color: rgba(255,152,0,0.98);
 }
@@ -232,15 +249,17 @@ body::before {
 }
 
 nav {
-  position: fixed;
-  top: 0;
-  left: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3000; /* ensure nav stays above full-screen map/video */
+    padding: 6px 8px;
 }
 
-nav a {
-  display: inline-block;
-  margin-right: 10px;
-}
+nav a { display:inline-block; margin-right:12px; }
+nav img { display:inline-block; height:40px; width:auto; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25)); border:none; outline:none; }
+nav a { border:none; outline:none; }
+nav a:focus, nav a:active { outline:none; }
 
 
 
