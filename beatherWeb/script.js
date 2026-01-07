@@ -18,20 +18,28 @@ function setBestScore(game, score) {
 function updateScoreAndBest(game, currentScore) {
 	if (game === 'sunny') {
 		gameScore = currentScore;
-		$('#game-score').text('Score: ' + gameScore);
+		const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+		const dict = i18n[langSel] || i18n.en;
+		$('#game-score').text(dict['label.score'] + ': ' + gameScore);
 	} else if (game === 'flappy') {
 		flappy.score = currentScore;
-		$('#game-score').text('Score: ' + flappy.score);
+		const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+		const dict = i18n[langSel] || i18n.en;
+		$('#game-score').text(dict['label.score'] + ': ' + flappy.score);
 	}
 	const stored = getBestScore(game);
 	if (stored === null) {
 		// first run: set and show so player sees a target
 		setBestScore(game, currentScore);
-		$('#best-score').text('Best: ' + currentScore);
+		const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+		const dict = i18n[langSel] || i18n.en;
+		$('#best-score').text(dict['label.best'] + ': ' + currentScore);
 	} else if (currentScore > stored) {
 		// player surpassed stored best during play — update immediately
 		setBestScore(game, currentScore);
-		$('#best-score').text('Best: ' + currentScore);
+		const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+		const dict = i18n[langSel] || i18n.en;
+		$('#best-score').text(dict['label.best'] + ': ' + currentScore);
 	}
 }
 // click timestamps for sun clicks
@@ -102,8 +110,10 @@ function startGame() {
 	// reload best score from storage at start (show 0 if none)
 	const bs = getBestScore('sunny');
 	const displayBest = bs === null ? 0 : bs;
-	$('#best-score').text('Best: ' + displayBest);
-	$('#game-score').text('Score: 0');
+	const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+	const dict = i18n[langSel] || i18n.en;
+	$('#best-score').text(dict['label.best'] + ': ' + displayBest);
+	$('#game-score').text(dict['label.score'] + ': 0');
 	$('#game-timer').text(gameTime);
 	$('#game-area').empty();
 	spawnGameIcons();
@@ -123,8 +133,10 @@ function stopGame() {
 
 function endGame() {
 	stopGame();
-	$('#game-timer').text('Time Up!');
-	$('#game-area').html('<div style="font-size:1.3em;margin-top:18px;">Final Score: ' + gameScore + '</div>');
+	const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+	const dict = i18n[langSel] || i18n.en;
+	$('#game-timer').text(dict['label.timeup']);
+	$('#game-area').html('<div style="font-size:1.3em;margin-top:18px;">' + (dict['label.score'] || 'Score') + ': ' + gameScore + '</div>');
         	// Persist best score for sunny: if none exists, set to this run; otherwise update only when exceeded
         	const stored = getBestScore('sunny');
         	if (stored === null) {
@@ -243,10 +255,12 @@ $(document).ready(function () {
 		const g = $(this).data('game');
 		activeGame = g;
 		// set title and reset area
-		$('#game-title').text(g === 'sunny' ? 'Sunny Clicker' : 'Flappy Cloud');
+		const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
+		const dict = i18n[langSel] || i18n.en;
+		$('#game-title').text(g === 'sunny' ? (dict['game.sunny.title'] || 'Sunny Clicker') : (dict['game.flappy.title'] || 'Flappy Cloud'));
 		$('#game-area').removeClass('flappy');
 		$('#frenzy-banner').addClass('hidden');
-		$('#best-score').text('Best: ' + (localStorage.getItem('beather_best_score_' + g) || '0'));
+		$('#best-score').text((dict['label.best'] || 'Best') + ': ' + (localStorage.getItem('beather_best_score_' + g) || '0'));
 		// Show overlay and start game
 		showGameOverlay();
 	});
@@ -380,7 +394,8 @@ $(document).ready(function () {
 				const langSel = $('#lang-select').val() || 'en';
 				weatherFn(city, { lang: langSel });
 			} else {
-				alert('Please enter a city name.');
+				const dict2 = i18n[$('#lang-select').val() || 'en'] || i18n.en;
+				alert(dict2['alert.enterCity']);
 			}
 		});
 
@@ -400,7 +415,8 @@ $(document).ready(function () {
 							const langSel = $('#lang-select').val() || localStorage.getItem('beather_lang') || 'en';
 							weatherFn({ lat, lon }, { lang: langSel });
 					}, function (err) {
-						alert('Unable to retrieve location: ' + err.message);
+							const dict3 = i18n[$('#lang-select').val() || 'en'] || i18n.en;
+							alert((dict3['alert.geoError'] || 'Unable to retrieve location: ') + err.message);
 					});
 				} else {
 					alert('Geolocation is not supported by your browser.');
@@ -644,7 +660,8 @@ async function weatherFn(query, options = {}) {
 			switchWeatherTheme(weatherMain);
 			weatherShowFn(data);
 		} else {
-			alert('City not found. Please try again.');
+			const dict = i18n[lang] || i18n.en;
+			alert(dict['alert.cityNotFound']);
 		}
 	} catch (error) {
 		console.error('Error fetching weather data:', error);

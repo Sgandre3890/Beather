@@ -108,21 +108,21 @@
 				<img src="../Images/Beather.png" alt="Beather logo" class="logo">
 			</h1>
 			<h3>
-				Weather App — The best weather app
+				<span data-i18n="headline">Weather App — The best weather app</span>
 			</h3>
 			<input type="text" id="city-input"
-				placeholder="Enter city name">
+				placeholder="Enter city name" data-i18n-placeholder="input.city">
 			<button id="city-input-btn"
-					onclick="weatherFn($('#city-input').val())">
+					onclick="weatherFn($('#city-input').val())" data-i18n="btn.getWeather">
 					Get Weather
 			</button>
 			<div id="weather-info"
 				class="animate__animated animate__fadeIn">
 				<h3 id="city-name"></h3>
-				<p id="date"></p>
-				<p id="temperature"></p>
-				<p id="description"></p>
-				<p id="wind-speed"></p>
+				<p id="date" data-i18n="label.date"></p>
+				<p id="temperature" data-i18n="label.temperature"></p>
+				<p id="description" data-i18n="label.description"></p>
+				<p id="wind-speed" data-i18n="label.wind"></p>
 			</div>
 		</div>
 	</div>
