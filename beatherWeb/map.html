@@ -12,6 +12,22 @@
     #map { width: 100vw; height: 100vh; }
     /* Keep nav at top-left, but shift right just enough to avoid Leaflet zoom (slightly less offset) */
     nav { left: 45px; right: auto; }
+    /* Heat toggle button (top-right, above map controls) */
+    #heat-toggle {
+      position: fixed;
+      top: 8px;
+      right: 8px;
+      z-index: 3001; /* above nav/map */
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 152, 0, 0.92);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      font-family: inherit;
+    }
+    #heat-toggle.off { background: rgba(96, 125, 139, 0.92); }
   </style>
   
 </head>
@@ -23,6 +39,8 @@
   </nav>
 
   <div id="map"></div>
+  <!-- Heat toggle (temp layer visibility) -->
+  <button id="heat-toggle" title="Toggle heat layer">Heat: ON</button>
 
   <script>
     // Original immediate initialization
@@ -30,11 +48,34 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-
-    L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
+    // Temperature overlay (managed via toggle)
+    var tempLayer = L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
       attribution: '© OpenWeatherMap',
       opacity: 0.5
-    }).addTo(map);
+    });
+    // Restore persisted state; default to enabled
+    var heatEnabled = localStorage.getItem('map_heat_enabled');
+    heatEnabled = (heatEnabled === null) ? true : (heatEnabled === 'true');
+    if (heatEnabled) { tempLayer.addTo(map); }
+    var heatBtn = document.getElementById('heat-toggle');
+    function updateHeatBtn() {
+      if (!heatBtn) return;
+      heatBtn.textContent = heatEnabled ? 'Heat: ON' : 'Heat: OFF';
+      heatBtn.classList.toggle('off', !heatEnabled);
+    }
+    updateHeatBtn();
+    if (heatBtn) {
+      heatBtn.addEventListener('click', function(){
+        heatEnabled = !heatEnabled;
+        localStorage.setItem('map_heat_enabled', String(heatEnabled));
+        if (heatEnabled) {
+          tempLayer.addTo(map);
+        } else {
+          try { map.removeLayer(tempLayer); } catch(e) {}
+        }
+        updateHeatBtn();
+      });
+    }
   </script>
 </body>
 </html>
