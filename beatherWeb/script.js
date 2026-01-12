@@ -470,10 +470,13 @@ $(document).ready(function () {
 		// Apply language from storage and i18n once on startup; future changes via Settings modal
 		const savedLang = localStorage.getItem('beather_lang') || 'en';
 		applyI18n(savedLang);
-		// Default display preference
-		const displayPref = localStorage.getItem('beather_display') || 'temp';
-		if (displayPref === 'temp') { $('#temperature').show(); $('#wind-speed').hide(); }
-		else { $('#wind-speed').show(); $('#temperature').hide(); }
+		// Default display preference (support both)
+		const showTempDefault = localStorage.getItem('beather_show_temp');
+		const showWindDefault = localStorage.getItem('beather_show_wind');
+		const showTemp = (showTempDefault === null) ? true : (showTempDefault === 'true');
+		const showWind = (showWindDefault === null) ? true : (showWindDefault === 'true');
+		$('#temperature').toggle(showTemp);
+		$('#wind-speed').toggle(showWind);
 
 		$('#city-input-btn').off('click').on('click', function () {
 			const city = $('#city-input').val().trim();
@@ -592,7 +595,8 @@ const i18n = {
 		'settings.detectNow': 'Detect Now',
 		'settings.manualCity': 'Manual city',
 		'settings.fetchWeather': 'Fetch Weather',
-		'settings.save': 'Save'
+			'settings.save': 'Save',
+			'settings.restoreDefaults': 'Restore Defaults'
 	},
 	zh_cn: {
 		'nav.home': '首页',
@@ -648,7 +652,8 @@ const i18n = {
 		'settings.detectNow': '立刻定位',
 		'settings.manualCity': '手动输入城市',
 		'settings.fetchWeather': '获取天气',
-		'settings.save': '保存'
+			'settings.save': '保存',
+			'settings.restoreDefaults': '恢复默认'
 	},
 	es: {
 		'nav.home': 'Inicio',
@@ -704,7 +709,8 @@ const i18n = {
 		'settings.detectNow': 'Detectar ahora',
 		'settings.manualCity': 'Ciudad manual',
 		'settings.fetchWeather': 'Obtener clima',
-		'settings.save': 'Guardar'
+			'settings.save': 'Guardar',
+			'settings.restoreDefaults': 'Restaurar valores predeterminados'
 	}
 };
 
@@ -954,9 +960,10 @@ function setupSettingsUI() {
 		if (unitsEl) unitsEl.value = localStorage.getItem('beather_units') || 'auto';
 		if (autoEl) autoEl.checked = (localStorage.getItem('beather_autoDetect') === 'true');
 		if (cityEl) cityEl.value = localStorage.getItem('beather_lastCity') || '';
-		const displayPref = localStorage.getItem('beather_display') || 'temp';
-		if (dispTempEl) dispTempEl.checked = (displayPref === 'temp');
-		if (dispWindEl) dispWindEl.checked = (displayPref === 'wind');
+		const storedShowTemp = localStorage.getItem('beather_show_temp');
+		const storedShowWind = localStorage.getItem('beather_show_wind');
+		if (dispTempEl) dispTempEl.checked = (storedShowTemp === null ? true : storedShowTemp === 'true');
+		if (dispWindEl) dispWindEl.checked = (storedShowWind === null ? true : storedShowWind === 'true');
 	}
 
 	btn.addEventListener('click', function() {
@@ -980,6 +987,54 @@ function setupSettingsUI() {
 		weatherFn(city, { lang, units });
 	});
 
+	// Global Restore Defaults
+	const restoreBtn = document.getElementById('settings-restore');
+	if (restoreBtn) restoreBtn.addEventListener('click', function(){
+		// Defaults we want:
+		// Audio: on, volume 0.6; Video: on
+		// Language: 'en'; Units: 'auto'
+		// Location: autoDetect off, manual city empty
+		// Display: both temperature and wind visible
+		localStorage.setItem('beather_audio','true');
+		localStorage.setItem('beather_bgvideo','true');
+		localStorage.setItem('beather_volume','0.6');
+		localStorage.setItem('beather_lang','en');
+		localStorage.setItem('beather_units','auto');
+		localStorage.setItem('beather_autoDetect','false');
+		localStorage.removeItem('beather_lastCity');
+		localStorage.setItem('beather_show_temp','true');
+		localStorage.setItem('beather_show_wind','true');
+
+		// Reflect to UI controls immediately
+		const audioChk = document.getElementById('set-audio-enabled'); if (audioChk) audioChk.checked = true;
+		const videoChk = document.getElementById('set-video-enabled'); if (videoChk) videoChk.checked = true;
+		const volEl = document.getElementById('set-volume'); if (volEl) volEl.value = '60';
+		const langEl = document.getElementById('set-language'); if (langEl) langEl.value = 'en';
+		const unitsEl = document.getElementById('set-units'); if (unitsEl) unitsEl.value = 'auto';
+		const autoEl = document.getElementById('set-auto-detect'); if (autoEl) autoEl.checked = false;
+		const cityEl = document.getElementById('set-manual-city'); if (cityEl) cityEl.value = '';
+		const tempEl = document.getElementById('set-display-temp'); if (tempEl) tempEl.checked = true;
+		const windEl = document.getElementById('set-display-wind'); if (windEl) windEl.checked = true;
+
+		// Apply states immediately
+		weatherState.audioEnabled = true;
+		weatherState.backgroundEnabled = true;
+		const audioEl = document.getElementById('weather-audio'); if (audioEl) audioEl.volume = 0.6;
+		updateAudioState();
+		updateVideoState();
+		moment && moment.locale && moment.locale(mapLangToMoment('en'));
+		applyI18n('en');
+		$('#temperature').show();
+		$('#wind-speed').show();
+
+		// Optional: 立即刷新天气（若之前有来源）
+		if (window.lastQuery) {
+			weatherFn(window.lastQuery, { lang: 'en', units: getPreferredUnits('en') });
+		} else if (window.lastCoords) {
+			weatherFn(window.lastCoords, { lang: 'en', units: getPreferredUnits('en') });
+		}
+	});
+
 		saveBtn.addEventListener('click', function(){
 			const audio = document.getElementById('set-audio-enabled').checked;
 			const video = document.getElementById('set-video-enabled').checked;
@@ -988,7 +1043,8 @@ function setupSettingsUI() {
 			const units = document.getElementById('set-units').value || 'auto';
 			const autoDetect = document.getElementById('set-auto-detect').checked;
 			const city = (document.getElementById('set-manual-city')?.value || '').trim();
-			const displayPref = document.getElementById('set-display-wind').checked ? 'wind' : 'temp';
+			const showTemp = document.getElementById('set-display-temp').checked;
+			const showWind = document.getElementById('set-display-wind').checked;
 
 		localStorage.setItem('beather_audio', String(audio));
 		localStorage.setItem('beather_bgvideo', String(video));
@@ -997,7 +1053,8 @@ function setupSettingsUI() {
 		localStorage.setItem('beather_units', units);
 		localStorage.setItem('beather_autoDetect', String(autoDetect));
 		if (city) localStorage.setItem('beather_lastCity', city);
-		localStorage.setItem('beather_display', displayPref);
+		localStorage.setItem('beather_show_temp', String(showTemp));
+		localStorage.setItem('beather_show_wind', String(showWind));
 
 		// Apply immediately
 		weatherState.audioEnabled = audio;
@@ -1008,14 +1065,9 @@ function setupSettingsUI() {
 		updateVideoState();
 		moment && moment.locale && moment.locale(mapLangToMoment(lang));
 		applyI18n(lang);
-		// Apply display preference immediately
-		if (displayPref === 'temp') {
-			$('#temperature').show();
-			$('#wind-speed').hide();
-		} else {
-			$('#wind-speed').show();
-			$('#temperature').hide();
-		}
+		// Apply display preference immediately (both supported)
+		$('#temperature').toggle(showTemp);
+		$('#wind-speed').toggle(showWind);
 
 		// Refresh weather according to preference
 		const effUnits = (units === 'auto') ? getPreferredUnits(lang) : units;

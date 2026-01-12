@@ -139,8 +139,8 @@
 				</label>
 				<label class="settings-row">
 					<span data-i18n="settings.display">Display</span>
-					<label style="margin-left:10px;"><input type="radio" name="display-mode" id="set-display-temp" checked /> <span data-i18n="btn.showTemp">Show Temperature</span></label>
-					<label style="margin-left:10px;"><input type="radio" name="display-mode" id="set-display-wind" /> <span data-i18n="btn.showWind">Show Wind</span></label>
+					<label style="margin-left:10px;"><input type="checkbox" id="set-display-temp" checked /> <span data-i18n="btn.showTemp">Show Temperature</span></label>
+					<label style="margin-left:10px;"><input type="checkbox" id="set-display-wind" checked /> <span data-i18n="btn.showWind">Show Wind</span></label>
 				</label>
 			</div>
 
@@ -179,6 +179,7 @@
 			</div>
 
 			<div class="settings-actions">
+				<button id="settings-restore" class="menu-btn" data-i18n="settings.restoreDefaults">Restore Defaults</button>
 				<button id="settings-cancel" class="menu-btn" data-i18n="btn.cancel">Cancel</button>
 				<button id="settings-save" class="menu-btn primary" data-i18n="settings.save">Save</button>
 			</div>
