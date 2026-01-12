@@ -10,13 +10,16 @@
   <style>
     /* Keep original full-screen map look */
     #map { width: 100vw; height: 100vh; }
+    /* Keep nav at top-left, but shift right just enough to avoid Leaflet zoom (slightly less offset) */
+    nav { left: 45px; right: auto; }
   </style>
   
 </head>
 <body>
   <nav>
-    <a href="index.html" data-i18n="nav.home">Home</a>
-    <a href="map.html" data-i18n="nav.map">Weather Map</a>
+    <a href="index.html" title="Home">
+      <img src="../Images/Home.png" alt="Home" data-i18n="nav.home" />
+    </a>
   </nav>
 
   <div id="map"></div>

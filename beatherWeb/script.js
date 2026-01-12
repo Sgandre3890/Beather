@@ -63,15 +63,15 @@ let flappy = {
 	cloudY: 180,
 	cloudX: 100,
 	velocity: 0,
-	// stronger gravity for more challenge; smaller lift so clicks produce smaller hops
-	gravity: 0.45,
-	// increase lift so the cloud can actually clear pipes when player clicks
-	lift: -4.2,
+	// tuned gravity/lift to feel fair and allow clearing pipes
+	gravity: 0.38,
+	// slightly stronger lift so clicking raises a bit more
+	lift: -5.2,
 	// per-game tunables
-	pipeSpeed: 3.8,
+	pipeSpeed: 3.2,
 	spawnRate: 75,
 	pipes: [],
-	pipeGap: 120,
+	pipeGap: 140,
 	pipeWidth: 52,
 	frameCount: 0,
 	score: 0,
@@ -103,6 +103,8 @@ function startGame() {
 	gameScore = 0;
 	gameTime = 100;
 	sunClickTimestamps = [];
+	// Ensure timer is visible for Sunny Clicker
+	$('#game-timer').show();
 	// reload best score from storage at start (show 0 if none)
 	const bs = getBestScore('sunny');
 	const displayBest = bs === null ? 0 : bs;
@@ -1188,6 +1190,8 @@ let pipeFrontImageSrc = resolvePath('../Images/pipes/pipe_front.svg');
 
 function startFlappy() {
 	// reset state
+	// Hide timer for Flappy Cloud (no countdown used)
+	$('#game-timer').hide();
 	flappy.pipes = [];
 	flappy.frameCount = 0;
 	flappy.score = 0;
@@ -1216,6 +1220,8 @@ function startFlappy() {
 	$('#game-area').append(canvas);
 	flappy.canvas = canvas;
 	flappy.ctx = canvas.getContext('2d');
+	// ensure smooth scaling for cloud sprites
+	try { flappy.ctx.imageSmoothingEnabled = true; } catch(_) {}
 
 	// load cloud images
 	flappy.cloudImgs = {
@@ -1227,10 +1233,10 @@ function startFlappy() {
 	flappy.cloudImgs.sad.src = resolvePath('../Images/clouds/sadcloud.svg');
 	flappy.cloudImgs.veryhappy.src = resolvePath('../Images/clouds/veryhappycloud.svg');
 	flappy.currentImg = flappy.cloudImgs.happy;
-	// cloud drawing size (smaller) and collision inset
-	flappy.cloudDrawW = 42;
-	flappy.cloudDrawH = 36;
-	flappy.collisionInset = 8; // shrink collision box by inset on each side
+	// cloud drawing size and collision inset (slightly larger for clarity)
+	flappy.cloudDrawW = 50;
+	flappy.cloudDrawH = 40;
+	flappy.collisionInset = 10; // shrink collision box by inset on each side
 	flappy.gameOver = false;
 	flappy._blink = false;
 	flappy.groundHeight = 26;
@@ -1294,6 +1300,9 @@ function updateFlappy() {
 	if (flappy.gameOver) return;
 	// physics
 	flappy.velocity += flappy.gravity;
+	// clamp velocity to avoid instant wrap or too-fast falls
+	if (flappy.velocity > 6.5) flappy.velocity = 6.5;
+	if (flappy.velocity < -7.0) flappy.velocity = -7.0;
 	flappy.cloudY += flappy.velocity;
 	// ceiling clamp
 	if (flappy.cloudY < 0) {
@@ -1304,6 +1313,7 @@ function updateFlappy() {
 	const groundY = flappy.height - (flappy.groundHeight || 26);
 	if (flappy.cloudY + cloudH > groundY) {
 		// hit ground
+		flappy.cloudY = groundY - cloudH; // clamp at ground to avoid wrap
 		handleFlappyCollision('ground');
 	}
 
@@ -1311,7 +1321,7 @@ function updateFlappy() {
 	flappy.frameCount++;
 	if (flappy.frameCount % (flappy.spawnRate || 75) === 0) {
 		// Normalize pipe gap: consistent bounds and slight tightening over progress
-		const progressFactor = Math.min(1, (flappy.totalPassed || 0) / 40); // 0..1
+		const progressFactor = Math.min(1, (flappy.totalPassed || 0) / 50); // 0..1, slower difficulty ramp
 		const baseMinGap = Math.max(Math.floor(flappy.cloudDrawH * 2.0), 64);
 		const baseMaxGap = Math.min(Math.floor(flappy.cloudDrawH * 3.5), flappy.height - 140);
 		// reduce max gap as player progresses, but never below min
@@ -1332,7 +1342,7 @@ function updateFlappy() {
 	// move pipes and check score
 	for (let i = flappy.pipes.length - 1; i >= 0; i--) {
 		const p = flappy.pipes[i];
-		p.x -= (flappy.pipeSpeed || 3.8);
+		p.x -= (flappy.pipeSpeed || 3.2);
 		// passed check
 			if (!p.passed && (p.x + flappy.pipeWidth) < flappy.cloudX) {
 				p.passed = true;
