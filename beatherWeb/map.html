@@ -12,22 +12,12 @@
     #map { width: 100vw; height: 100vh; }
     /* Keep nav at top-left, but shift right just enough to avoid Leaflet zoom (slightly less offset) */
     nav { left: 45px; right: auto; }
-    /* Heat toggle button (top-right, above map controls) */
-    #heat-toggle {
-      position: fixed;
-      top: 8px;
-      right: 8px;
-      z-index: 3001; /* above nav/map */
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: none;
-      background: rgba(255, 152, 0, 0.92);
-      color: #fff;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-      font-family: inherit;
-    }
-    #heat-toggle.off { background: rgba(96, 125, 139, 0.92); }
+    /* Layers dropdown (top-right) */
+    #layers-panel { position: fixed; top: 8px; right: 8px; z-index: 3001; }
+    #layers-toggle { padding: 6px 10px; border-radius: 8px; border: none; background: rgba(69, 90, 100, 0.92); color:#fff; cursor:pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.18); }
+    #layers-menu { margin-top: 6px; background: rgba(255,255,255,0.95); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.18); padding: 8px 10px; min-width: 200px; display: none; }
+    #layers-menu label { display:flex; align-items:center; gap:8px; padding: 6px 4px; font-size: 14px; }
+    #layers-menu .desc { color:#555; font-size: 12px; margin-left: 22px; }
   </style>
   
 </head>
@@ -39,8 +29,17 @@
   </nav>
 
   <div id="map"></div>
-  <!-- Heat toggle (temp layer visibility) -->
-  <button id="heat-toggle" title="Toggle heat layer">Heat: ON</button>
+  <!-- Layers dropdown panel -->
+  <div id="layers-panel">
+    <button id="layers-toggle" title="Layers">Layers ▾</button>
+    <div id="layers-menu">
+      <label><input type="checkbox" id="overlay-temp"/> Temperature</label>
+      <label><input type="checkbox" id="overlay-wind"/> Wind</label>
+      <label><input type="checkbox" id="layer-clouds"/> Clouds</label>
+      <label><input type="checkbox" id="layer-precip"/> Precipitation</label>
+      <label><input type="checkbox" id="layer-pressure"/> Sea level pressure</label>
+    </div>
+  </div>
 
   <script>
     // Original immediate initialization
@@ -48,32 +47,68 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
-    // Temperature overlay (managed via toggle)
-    var tempLayer = L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
-      attribution: '© OpenWeatherMap',
-      opacity: 0.5
-    });
-    // Restore persisted state; default to enabled
-    var heatEnabled = localStorage.getItem('map_heat_enabled');
-    heatEnabled = (heatEnabled === null) ? true : (heatEnabled === 'true');
-    if (heatEnabled) { tempLayer.addTo(map); }
-    var heatBtn = document.getElementById('heat-toggle');
-    function updateHeatBtn() {
-      if (!heatBtn) return;
-      heatBtn.textContent = heatEnabled ? 'Heat: ON' : 'Heat: OFF';
-      heatBtn.classList.toggle('off', !heatEnabled);
+    // Overlays: Temperature and Wind (mutually exclusive, both can be OFF)
+    var tempLayer = L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
+    var windLayer = L.tileLayer('https://tile.openweathermap.org/map/wind/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
+
+    // Layers: Clouds, Precipitation, Sea level pressure
+    var cloudsLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
+    var precipLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
+    var pressureLayer = L.tileLayer('https://tile.openweathermap.org/map/pressure/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
+    // Single selection across all overlays
+    var sel = localStorage.getItem('map_overlay_sel') || 'none';
+    var elOTemp = document.getElementById('overlay-temp');
+    var elOWind = document.getElementById('overlay-wind');
+    var elClouds = document.getElementById('layer-clouds');
+    var elPrecip = document.getElementById('layer-precip');
+    var elPress  = document.getElementById('layer-pressure');
+    function applySelection() {
+      // reflect checkboxes
+      if (elOTemp) elOTemp.checked = (sel === 'temp');
+      if (elOWind) elOWind.checked = (sel === 'wind');
+      if (elClouds) elClouds.checked = (sel === 'clouds');
+      if (elPrecip) elPrecip.checked = (sel === 'precip');
+      if (elPress)  elPress.checked  = (sel === 'pressure');
+      // remove all layers
+      try { map.removeLayer(tempLayer); } catch(e) {}
+      try { map.removeLayer(windLayer); } catch(e) {}
+      try { map.removeLayer(cloudsLayer); } catch(e) {}
+      try { map.removeLayer(precipLayer); } catch(e) {}
+      try { map.removeLayer(pressureLayer); } catch(e) {}
+      // add selected layer
+      if (sel === 'temp') tempLayer.addTo(map);
+      else if (sel === 'wind') windLayer.addTo(map);
+      else if (sel === 'clouds') cloudsLayer.addTo(map);
+      else if (sel === 'precip') precipLayer.addTo(map);
+      else if (sel === 'pressure') pressureLayer.addTo(map);
+      localStorage.setItem('map_overlay_sel', sel);
     }
-    updateHeatBtn();
-    if (heatBtn) {
-      heatBtn.addEventListener('click', function(){
-        heatEnabled = !heatEnabled;
-        localStorage.setItem('map_heat_enabled', String(heatEnabled));
-        if (heatEnabled) {
-          tempLayer.addTo(map);
-        } else {
-          try { map.removeLayer(tempLayer); } catch(e) {}
+    applySelection();
+    function bindToggle(el, name) {
+      if (!el) return;
+      el.addEventListener('change', function(){
+        if (el.checked) sel = name; else sel = 'none';
+        applySelection();
+      });
+    }
+    bindToggle(elOTemp, 'temp');
+    bindToggle(elOWind, 'wind');
+    bindToggle(elClouds, 'clouds');
+    bindToggle(elPrecip, 'precip');
+    bindToggle(elPress, 'pressure');
+
+    // Dropdown toggle
+    var layersToggle = document.getElementById('layers-toggle');
+    var layersMenu   = document.getElementById('layers-menu');
+    if (layersToggle && layersMenu) {
+      layersToggle.addEventListener('click', function(){
+        layersMenu.style.display = (layersMenu.style.display === 'none' || layersMenu.style.display === '') ? 'block' : 'none';
+      });
+      // Optional: click outside to close
+      document.addEventListener('click', function(ev){
+        if (!layersMenu.contains(ev.target) && ev.target !== layersToggle) {
+          layersMenu.style.display = 'none';
         }
-        updateHeatBtn();
       });
     }
   </script>
