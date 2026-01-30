@@ -202,6 +202,7 @@ body {
 }
 
 /* Background video style */
+/* Hidden by default to avoid flash; shown when 'visible' class is added */
 .weather-video {
     position: fixed;
     top: 0;

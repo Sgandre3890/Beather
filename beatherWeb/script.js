@@ -1,4 +1,30 @@
-
+//
+//                       _oo0oo_
+//                      o8888888o
+//                      88" . "88
+//                      (| -_- |)
+//                      0\  =  /0
+//                    ___/`---'\___
+//                  .' \\|     |// '.
+//                 / \\|||  :  |||// \
+//                / _||||| -:- |||||- \
+//               |   | \\\  -  /// |   |
+//               | \_|  ''\---/''  |_/ |
+//               \  .-\__  '-'  ___/-. /
+//             ___'. .'  /--.--\  `. .'___
+//          ."" '<  `.___\_<|>_/___.' >' "".
+//         | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+//         \  \ `_.   \_ __\ /__ _/   .-` /  /
+//     =====`-.____`.___ \_____/___.-`___.-'=====
+//                       `=---='
+//
+//
+//     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+//               Blessing: No BUG forever
+//
+//
+//
 // --- Sunny Clicker Game (v2) ---
 let gameActive = false;
 let gameScore = 0;
@@ -45,7 +71,6 @@ let frenzyActive = false;
 let frenzyTimeout = null;
 const gameIcons = [
 	{ src: '../Images/WebAssets/SunnyIcon.svg', type: 'sun', points: +1 },
-	{ src: '../Images/WebAssets/cloud.svg', type: 'cloud', points: -1 },
 	{ src: '../Images/WebAssets/PartlySunnyIcon.svg', type: 'partly', points: -1 },
 	{ src: '../Images/WebAssets/SunnyIconV2.svg', type: 'sun2', points: +1 },
 	// Add more distractors if available
@@ -826,23 +851,103 @@ function playBackgroundMedia() {
 	playAudio();
 }
 
-// Play video
+// Track latest video switch to avoid race conditions
+let _videoSwitchToken = 0;
+
+// Play video (robust switching)
 function playVideo() {
 	const videoEl = document.getElementById('weather-video');
-	const videoSrc = assetBasePath + weatherState.currentVideo;
-	
-	if (videoEl.src !== videoSrc) {
-		videoEl.src = videoSrc;
-		videoEl.load();
+	if (!videoEl) return;
+
+	const targetSrc = assetBasePath + weatherState.currentVideo;
+	const currentSrc = videoEl.currentSrc || videoEl.src || '';
+
+	// If background disabled, just pause and hide
+	if (!weatherState.backgroundEnabled) {
+		try { videoEl.pause(); } catch(_) {}
+		videoEl.classList.remove('visible');
+		weatherState.videoPlaying = false;
+		return;
 	}
 
-	if (weatherState.backgroundEnabled) {
-		videoEl.play().catch(err => {
-			console.log('Video autoplay prevented:', err);
-		});
-		weatherState.videoPlaying = true;
+	// New switch token for this call
+	const myToken = ++_videoSwitchToken;
+
+	// If source changed, safely pause and reload
+	const needChange = !currentSrc.endsWith(targetSrc);
+	if (needChange) {
+		try { videoEl.pause(); } catch(_) {}
+		// Hide before switching to avoid flash/black frame
+		videoEl.classList.remove('visible');
+
+		// Update source and load
+		videoEl.src = targetSrc;
+		try { videoEl.load(); } catch(_) {}
+	}
+
+	// Bind readiness handler once per switch
+	function onReady() {
+		// Only act if this is the latest switch request
+		if (myToken !== _videoSwitchToken) return;
+		// Reveal and play
+		videoEl.classList.add('visible');
+		const p = videoEl.play();
+		if (p && typeof p.then === 'function') {
+			p.then(() => { weatherState.videoPlaying = true; }).catch(err => {
+				console.log('Video autoplay prevented (ready):', err);
+				weatherState.videoPlaying = false;
+			});
+		} else {
+			weatherState.videoPlaying = true;
+		}
+		// Cleanup listeners
+		videoEl.removeEventListener('canplay', onReady);
+		videoEl.removeEventListener('loadeddata', onReady);
+	}
+
+	// Attach readiness listeners
+	videoEl.addEventListener('canplay', onReady);
+	videoEl.addEventListener('loadeddata', onReady);
+
+	// Fallback: if already ready enough, trigger immediately
+	if (videoEl.readyState >= 3) {
+		onReady();
 	} else {
-		videoEl.pause();
+		// Timeout fallback: ensure it doesn't stay hidden forever
+		setTimeout(() => {
+			if (myToken !== _videoSwitchToken) return;
+			try {
+				videoEl.classList.add('visible');
+				const p = videoEl.play();
+				if (p && typeof p.then === 'function') {
+					p.then(() => { weatherState.videoPlaying = true; }).catch(err => {
+						console.log('Video autoplay prevented (timeout):', err);
+						weatherState.videoPlaying = false;
+					});
+				} else {
+					weatherState.videoPlaying = true;
+				}
+			} catch (e) {
+				console.log('Video play fallback failed:', e);
+			}
+		}, 1500);
+	}
+}
+
+// Update video state (visibility + play/pause)
+function updateVideoState() {
+	const videoEl = document.getElementById('weather-video');
+	if (!videoEl) return;
+
+	if (weatherState.backgroundEnabled) {
+		// If already enough data, show quickly, else let playVideo handle readiness
+		if (videoEl.readyState >= 3) {
+			videoEl.classList.add('visible');
+		}
+		playVideo();
+	} else {
+		videoEl.classList.remove('visible');
+		try { videoEl.pause(); } catch(_) {}
 		weatherState.videoPlaying = false;
 	}
 }
@@ -874,43 +979,6 @@ function playAudio() {
 		// store current time so we can resume later
 		try { weatherState.audioPosition = audioEl.currentTime; } catch (e) { weatherState.audioPosition = 0; }
 		audioEl.pause();
-		weatherState.audioPlaying = false;
-	}
-}
-
-// Update video state
-function updateVideoState() {
-	const videoEl = document.getElementById('weather-video');
-	if (weatherState.backgroundEnabled) {
-		// If video is already loaded enough, show immediately
-		if (videoEl.readyState >= 3) { // HAVE_FUTURE_DATA
-			videoEl.classList.add('visible');
-		}
-		playVideo();
-	} else {
-		// Hide video smoothly and pause
-		videoEl.classList.remove('visible');
-		videoEl.pause();
-		weatherState.videoPlaying = false;
-	}
-}
-
-// Update audio state
-function updateAudioState() {
-	const audioEl = document.getElementById('weather-audio');
-	if (weatherState.audioEnabled) {
-		// resume from last position
-		if (audioEl) {
-			try {
-				if (weatherState.audioPosition) audioEl.currentTime = weatherState.audioPosition;
-			} catch (e) { /* ignore */ }
-		}
-		playAudio();
-	} else {
-		if (audioEl) {
-			try { weatherState.audioPosition = audioEl.currentTime; } catch (e) { weatherState.audioPosition = 0; }
-			audioEl.pause();
-		}
 		weatherState.audioPlaying = false;
 	}
 }
@@ -1027,7 +1095,7 @@ function setupSettingsUI() {
 		$('#temperature').show();
 		$('#wind-speed').show();
 
-		// Optional: 立即刷新天气（若之前有来源）
+		// Optional: refresh weather immediately (if there was a query source)
 		if (window.lastQuery) {
 			weatherFn(window.lastQuery, { lang: 'en', units: getPreferredUnits('en') });
 		} else if (window.lastCoords) {

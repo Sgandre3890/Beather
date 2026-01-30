@@ -8,7 +8,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Keep original full-screen map look */
+    /* Full-screen map */
     #map { width: 100vw; height: 100vh; }
     /* Keep nav at top-left, but shift right just enough to avoid Leaflet zoom (slightly less offset) */
     nav { left: 45px; right: auto; }
@@ -19,7 +19,7 @@
     #layers-menu label { display:flex; align-items:center; gap:8px; padding: 6px 4px; font-size: 14px; }
     #layers-menu .desc { color:#555; font-size: 12px; margin-left: 22px; }
 
-    /* Toast：失败重试等轻量提示 */
+    /* Toast: lightweight feedback (fail/retry etc.) */
     .map-toast {
       position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
       background: rgba(25,25,25,0.9); color:#fff; padding:8px 12px; border-radius:8px;
@@ -49,7 +49,7 @@
     .weather-details .wd-row { margin: 6px 0; }
     .weather-details .wd-sub { color:#666; font-size:12px; }
 
-    /* 左下角语言切换控件 */
+    /* Bottom-left language selector */
     .map-lang {
       position: fixed; left: 10px; bottom: 10px; z-index: 3002;
       background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.12);
@@ -94,7 +94,7 @@
     <div class="wd-row" id="wd-desc">—</div>
   </div>
 
-  <!-- 左下角语言切换控件 -->
+  <!-- Bottom-left language selector -->
   <div class="map-lang">
     <span id="map-lang-label">Language</span>
     <select id="map-lang-select">
@@ -105,19 +105,53 @@
   </div>
 
   <script>
-    // Original immediate initialization
-    var map = L.map('map').setView([40.7608, -111.8910], 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-    // Overlays: Temperature and Wind (mutually exclusive, both can be OFF)
-    var tempLayer = L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
-    var windLayer = L.tileLayer('https://tile.openweathermap.org/map/wind/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
+    // Cylindrical continuous world: horizontal wrap, vertical clamp only (keep drag enabled)
+    var map = L.map('map', {
+      worldCopyJump: true,
+      minZoom: 2,
+      maxZoom: 18
+    }).setView([40.7608, -111.8910], 6);
 
-    // Layers: Clouds, Precipitation, Sea level pressure
-    var cloudsLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
-    var precipLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
-    var pressureLayer = L.tileLayer('https://tile.openweathermap.org/map/pressure/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', { attribution: '© OpenWeatherMap', opacity: 0.5 });
+    // Base OSM tiles: allow horizontal wrap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      noWrap: false
+    }).addTo(map);
+
+    // Vertical-only clamp: keep latitude within ±85 without locking the viewport
+    (function enableVerticalClamp(){
+      function clampLat(lat){ return Math.max(-85, Math.min(85, lat)); }
+      function clampCenter(){
+        var c = map.getCenter();
+        var clampedLat = clampLat(c.lat);
+        if (clampedLat !== c.lat) {
+          // Pan to clamped latitude, preserve longitude; no bounds set so drag stays enabled
+          map.panTo([clampedLat, c.lng], { animate: false });
+        }
+      }
+      map.on('moveend', clampCenter);
+      map.on('zoomend', clampCenter);
+      // initial check
+      clampCenter();
+    })();
+
+    // Overlays: allow wrap to match base layer
+    var tempLayer = L.tileLayer('https://tile.openweathermap.org/map/temp/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
+      attribution: '© OpenWeatherMap', opacity: 0.5, noWrap: false
+    });
+    var windLayer = L.tileLayer('https://tile.openweathermap.org/map/wind/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
+      attribution: '© OpenWeatherMap', opacity: 0.5, noWrap: false
+    });
+    var cloudsLayer = L.tileLayer('https://tile.openweathermap.org/map/clouds/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
+      attribution: '© OpenWeatherMap', opacity: 0.5, noWrap: false
+    });
+    var precipLayer = L.tileLayer('https://tile.openweathermap.org/map/precipitation/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
+      attribution: '© OpenWeatherMap', opacity: 0.5, noWrap: false
+    });
+    var pressureLayer = L.tileLayer('https://tile.openweathermap.org/map/pressure/{z}/{x}/{y}.png?appid=04b2c70f5678cb788cb9d62c0325ef32', {
+      attribution: '© OpenWeatherMap', opacity: 0.5, noWrap: false
+    });
+
     // Single selection across all overlays
     var sel = localStorage.getItem('map_overlay_sel') || 'none';
     var elOTemp = document.getElementById('overlay-temp');
@@ -175,9 +209,9 @@
       });
     }
 
-    // ===== 覆盖式城市标签：仅显示当前语言，不再显示括号或其他语言 =====
+    // ===== City labels: show current language only (no parentheses or multi-language) =====
     (function(){
-      // 读取语言优先级：URL ?lang=xx -> localStorage 若干键 -> 默认 en
+      // Read language preference: URL ?lang=xx -> localStorage -> default 'en'
       function normLang(v){
         v = (v || '').toLowerCase();
         if (v === 'zh' || v === 'zh-cn' || v === 'zh_cn') return 'zh_cn';
@@ -195,8 +229,6 @@
         'Rome':'Roma','Singapore':'Singapur'
       };
 
-      // 地图当前语言（优先左下角选择）
-      function normLang(v){ v=(v||'').toLowerCase(); if(v==='zh'||v==='zh-cn'||v==='zh_cn')return 'zh_cn'; if(v==='es'||v==='es-es')return 'es'; return 'en'; }
       function getLangPref(){
         const localOverride = localStorage.getItem('map_lang_override');
         if (localOverride) return normLang(localOverride);
@@ -211,17 +243,17 @@
         const en = (enName || '').trim();
         const local = (localName || '').trim();
         if (lang === 'zh_cn') {
-          // 仅中文名
+          // Only Chinese name
           return zhByEn[en] || local || en;
         } else if (lang === 'es') {
-          // 仅西语名（覆盖范围内），否则英文近似
+          // Only Spanish name (within coverage), otherwise English approximate
           return esByEn[en] || en || local;
         }
-        // 英文环境：仅英文名，缺失则用本地名
+        // English environment: only English name, if missing then use local name
         return en || local;
       }
 
-      // 可扩展的城市数据（示例）
+      // Sample city data (expandable)
       const cities = [
         { nameLocal:'长春',           nameEn:'Changchun',      lat:43.88,   lon:125.32,  minZoom:4 },
         { nameLocal:'東京',           nameEn:'Tokyo',          lat:35.6762, lon:139.6503,minZoom:4 },
@@ -246,7 +278,7 @@
         return L.divIcon({
           className: 'city-label',
           html,
-          iconAnchor: [0, 0] // 左上角对齐坐标，避免宽度未知导致错位
+          iconAnchor: [0, 0] // Align to top-left, avoid misalignment due to unknown width
         });
       }
 
@@ -286,10 +318,10 @@
         refreshVisibility();
       }
 
-      // 初始渲染
+      // Initial render
       ensureMarkers(); refreshLanguage(); refreshVisibility();
 
-      // 交互：缩放/存储语言变化
+      // Interactions: zoom and storage language change
       map.on('zoomend', refreshVisibility);
       window.addEventListener('storage', function(e){
         if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) {
@@ -297,22 +329,22 @@
         }
       });
 
-      // 左下角语言控件联动
+      // Bottom-left language selector bindings
       const sel = document.getElementById('map-lang-select');
       if (sel) {
-        // 初始化为当前语言
+        // Initialize to current language
         sel.value = getLangPref();
         sel.addEventListener('change', function(){
           localStorage.setItem('map_lang_override', sel.value);
-          // 刷新城市标签
+          // Refresh city labels
           if (typeof refreshLanguage === 'function') { /* noop - closure scoped */ }
-          // 触发 storage 以让其它块刷新
+          // Trigger storage event to refresh other blocks
           window.dispatchEvent(new StorageEvent('storage', { key: 'map_lang_override', newValue: sel.value }));
         });
       }
     })();
 
-    // ==== i18n：地图 UI 全量翻译，无其他语言 ====
+    // Map UI i18n: translate labels fully (no multi-language)
     (function(){
       function normLang(v){
         v = (v || '').toLowerCase();
@@ -385,7 +417,7 @@
       }
       function setLabelText(labelEl, text){
         if (!labelEl) return;
-        // 确保最后一个子节点是文本节点，否则追加
+        // Ensure last child is a text node; otherwise append one
         var last = labelEl.lastChild;
         if (!last || last.nodeType !== Node.TEXT_NODE) {
           labelEl.appendChild(document.createTextNode(' ' + text));
@@ -405,7 +437,7 @@
         if (langLabel) langLabel.textContent = t('langLabel');
       }
       applyI18n();
-      // 短时轮询确保首页切换后立即同步
+      // Short polling to sync with home page language changes quickly
       (function pollLangSync(){
         let tries = 0; const timer = setInterval(() => {
           applyI18n();
@@ -415,18 +447,18 @@
       window.addEventListener('storage', function(e){
         if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) applyI18n();
       });
-      // 暴露给上方模块使用
+      // Expose for upper module
       window.BeatherMapI18n = { t, getLangPref, applyI18n };
     })();
 
-    // ==== 点击弹窗与详情（保持功能），弹窗仅显示简略天气（当前语言），详情显示全部（风速独立行） ====
+    // Popups and details: quick weather preview in popup; full details in panel
     (function(){
       var API_KEY = '04b2c70f5678cb788cb9d62c0325ef32';
       var lastTs = 0;
       var downPt = null, lastMoveDist = 0;
       var CLICK_PX_THRESH = 8, CLICK_THROTTLE_MS = 500;
 
-      // Toast (multi-language)
+      // Toast helpers
       var toastEl;
       function ensureToast(){
         if (toastEl) return toastEl;
@@ -464,12 +496,9 @@
         if (autoOrUnits !== 'auto') return autoOrUnits;
         return (country==='US'||country==='LR'||country==='MM') ? 'imperial' : 'metric';
       }
+      function shouldDirect(){ return (localStorage.getItem('map_click_action') === 'direct'); }
 
-      function shouldDirect(){
-        return (localStorage.getItem('map_click_action') === 'direct');
-      }
-
-      // Reverse geocode (per-click scope; no global caching)
+      // Reverse geocode (original simple behavior)
       function reverseGeo(lat, lon){
         var urlOW = 'https://api.openweathermap.org/geo/1.0/reverse?lat='+lat+'&lon='+lon+'&limit=1&appid='+API_KEY;
         return fetch(urlOW, { mode:'cors' })
@@ -505,56 +534,59 @@
           });
       }
 
-      // Weather with fallback (per-click scope; never cached globally)
-      var WEATHER_CODE_EN = {
-        0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',
-        45:'Fog',48:'Depositing rime fog',51:'Light drizzle',53:'Moderate drizzle',55:'Dense drizzle',
-        56:'Light freezing drizzle',57:'Dense freezing drizzle',61:'Slight rain',63:'Moderate rain',65:'Heavy rain',
-        66:'Light freezing rain',67:'Heavy freezing rain',71:'Slight snow',73:'Moderate snow',75:'Heavy snow',
-        77:'Snow grains',80:'Slight rain showers',81:'Moderate rain showers',82:'Violent rain showers',
-        85:'Slight snow showers',86:'Heavy snow showers',95:'Thunderstorm',96:'Thunderstorm with slight hail',99:'Thunderstorm with heavy hail'
-      };
-
-      function fetchWeatherOWM(lat, lon, units, lang){
-        var url = 'https://api.openweathermap.org/data/2.5/weather?lat='+lat+'&lon='+lon+'&units='+units+'&lang='+(lang==='zh_cn'?'zh_cn':(lang==='es'?'es':'en'))+'&appid='+API_KEY;
+      // Weather with fallback (unchanged)
+      function fetchWeatherOWM(lat, lon, units, lang) {
+        var url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&appid=04b2c70f5678cb788cb9d62c0325ef32&lang=' + lang;
         return fetch(url, { mode:'cors' })
           .then(function(r){ if(!r.ok) throw new Error('owm weather'); return r.json(); })
-          .then(function(j){
-            var temp = (j.main && typeof j.main.temp==='number') ? Math.round(j.main.temp) : null;
-            var desc = (j.weather && j.weather[0] && j.weather[0].description) ? j.weather[0].description : '';
-            var wind = (j.wind && typeof j.wind.speed === 'number') ? j.wind.speed : null;
-            return { temp: temp, desc: desc, wind: wind };
+          .then(function(data){
+            if (!data || !data.main) throw new Error('invalid data');
+            return {
+              temp: Math.round(data.main.temp - 273.15),
+              desc: (data.weather && data.weather.length) ? data.weather[0].description : '',
+              wind: (data.wind && data.wind.speed) ? Math.round(data.wind.speed * 3.6) : null, // m/s to km/h
+              country: data.sys.country,
+              name: data.name,
+              lat: lat, lon: lon,
+              source: 'owm'
+            };
           });
       }
-
-      function fetchWeatherOpenMeteo(lat, lon, units){
-        var u = (units==='imperial') ? { temp:'fahrenheit', wind:'mph' } : { temp:'celsius', wind:'kmh' };
-        var url = 'https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,weather_code,wind_speed_10m&temperature_unit='+u.temp+'&wind_speed_unit='+u.wind;
+      function fetchWeatherOpenMeteo(lat, lon, units, lang) {
+        var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&hourly=temperature_2m,precipitation_probability,weathercode&timezone=auto';
         return fetch(url, { mode:'cors' })
-          .then(function(r){ if(!r.ok) throw new Error('open-meteo'); return r.json(); })
-          .then(function(j){
-            var c = j.current || {};
-            var temp = (typeof c.temperature_2m==='number') ? Math.round(c.temperature_2m) : null;
-            var desc = WEATHER_CODE_EN[c.weather_code] || '';
-            var wind = (typeof c.wind_speed_10m === 'number') ? c.wind_speed_10m : null;
-            return { temp: temp, desc: desc, wind: wind };
+          .then(function(r){ if(!r.ok) throw new Error('open-meteo weather'); return r.json(); })
+          .then(function(data){
+            if (!data || !data.hourly) throw new Error('invalid data');
+            var w = data.hourly;
+            return {
+              temp: Math.round(w.temperature_2m[0]),
+              desc: (w.weathercode && w.weathercode.length) ? String(w.weathercode[0]) : '',
+              wind: null, // Open Meteo wind data not used here
+              country: '', // Country not directly available from Open Meteo
+              name: '', // Name not directly available from Open Meteo
+              lat: lat, lon: lon,
+              source: 'open-meteo'
+            };
+          });
+      }
+      function fetchWeatherWithFallback(lat, lon, units, lang) {
+        return fetchWeatherOWM(lat, lon, units, lang)
+          .catch(function(){
+            return fetchWeatherOpenMeteo(lat, lon, units, lang)
+              .catch(function(){
+                return Promise.reject(new Error('no weather data'));
+              });
           });
       }
 
-      function fetchWeatherWithFallback(lat, lon, units, lang){
-        return fetchWeatherOWM(lat, lon, units, lang)
-          .then(function(w){ if (w && w.temp!=null) return w; return fetchWeatherOpenMeteo(lat, lon, units); })
-          .catch(function(){ return fetchWeatherOpenMeteo(lat, lon, units); })
-          .catch(function(){ return { temp: null, desc: '', wind: null }; });
-      }
-
+      // Build names (original: English only for title; empty → 'Unknown')
       function buildNames(loc){
         var ln = loc.local_names || {};
         var en = ln.en || loc.name || '';
         return { en: en || 'Unknown', country: loc.country || '' };
       }
 
-      // Popup: quick preview（仅显示城市名 + 天气概况）
       function openPopup(latlng, names, weather, units){
         const title = names.en || 'Unknown';
         const descLine = (weather && weather.desc) ? weather.desc : '—';
@@ -580,18 +612,18 @@
       function openDetailsPanel(latlng, names, weather, units){
         const unitChar = units==='imperial' ? '°F' : '°C';
         const windUnit = units==='imperial' ? 'mph' : 'km/h';
-        // 标题与国家（当前语言标签）
+        // Title and country (labels in current language)
         if (wdTitle) wdTitle.textContent = names.en || 'Unknown';
         if (wdSub) wdSub.textContent = names.country ? (window.BeatherMapI18n.t('country') + ': ' + names.country) : '';
-        // 温度
+        // Temperature
         if (wdTemp) wdTemp.textContent = (weather && weather.temp!=null)
           ? (window.BeatherMapI18n.t('temperature') + ': ' + weather.temp + unitChar)
           : (window.BeatherMapI18n.t('temperature') + ': —');
-        // 天气
+        // Weather
         if (wdDesc) wdDesc.textContent = (weather && weather.desc)
           ? (window.BeatherMapI18n.t('weather') + ': ' + weather.desc)
           : (window.BeatherMapI18n.t('weather') + ': —');
-        // 风速独立一行
+        // Wind speed in a separate row
         const windLine = (weather && weather.wind!=null) ? (Math.round(weather.wind)+' '+windUnit) : '—';
         let windRow = document.getElementById('wd-wind-row');
         if (!windRow) {
@@ -654,7 +686,7 @@
           });
       });
 
-      // 语言变化时，若面板打开则更新标签文案（保持数值不变）
+      // When language changes, update panel labels if open (keep numeric values)
       window.addEventListener('storage', function(e){
         if (['beather_language','settings.language','set-language'].includes(e.key)) {
           if (panel && panel.classList.contains('show')) {
@@ -669,26 +701,26 @@
         }
       });
 
-      // 已打开弹窗的语言刷新
+      // Refresh active popup language (title remains English; update labels only)
       function updateActivePopupLanguage(){
         var popEl = document.querySelector('.leaflet-popup');
         if (!popEl || !window.BeatherMapI18n) return;
-        // 标题（第一行加粗文本）
+        // Title (first line bold)
         var titleEl = popEl.querySelector('div > div[style*="font-weight"]');
-        // 天气行
+        // Weather line
         var weatherLine = popEl.querySelector('div > div[style*="margin-bottom"]');
-        // 按钮
+        // Button
         var btn = popEl.querySelector('#map-pop-go');
-        // 更新标签文本（保持数值不变）
+        // Update label text (keep numeric values)
         var t = window.BeatherMapI18n.t;
         if (weatherLine) {
-          // 将“天气:”前缀替换为当前语言
+          // Replace "Weather:" prefix with current language
           weatherLine.textContent = weatherLine.textContent.replace(/^.*?:/, t('weather') + ':');
         }
         if (btn) btn.textContent = t('viewDetails');
       }
 
-      // 监听语言变化，刷新弹窗与详情面板文案
+      // Listen language change to refresh popup and panel labels
       window.addEventListener('storage', function(e){
         if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) {
           updateActivePopupLanguage();
@@ -696,12 +728,17 @@
         }
       });
 
-      // 左下角语言选择联动时也刷新已打开弹窗
+      // Also refresh popup on bottom-left language selector change
       var langSel = document.getElementById('map-lang-select');
       if (langSel) {
         langSel.addEventListener('change', function(){
           updateActivePopupLanguage();
         });
+      }
+    })();
+  </script>
+</body>
+</html>
       }
     })();
   </script>

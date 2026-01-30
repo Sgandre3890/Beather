@@ -13,7 +13,7 @@
 	<title>Beather</title>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<style>
-		/* 防闪烁与平滑淡入 */
+		/* Anti-flicker and smooth fade-in for background video */
 		.weather-video {
 			opacity: 0;
 			transition: opacity .25s ease;
@@ -22,12 +22,13 @@
 			position: fixed;
 			left: 0; top: 0; width: 100vw; height: 100vh;
 			object-fit: cover;
-			z-index: -1; /* 位于背景层之下，不与前景交叠重绘 */
+			z-index: -1;
 		}
-		.weather-video.show {
+		/* Use 'visible' to match style.css and script.js */
+		.weather-video.visible {
 			opacity: 1;
 		}
-		/* 背景容器确保不闪 */
+		/* Background container as placeholder; prevent repaint jitter */
 		.page-bg {
 			/* 可设置一张静态背景图作为占位 */
 			background: #000 url('../Images/weatherbackground/background.jpg') center/cover no-repeat;
@@ -83,7 +84,7 @@
 				<div id="game-score">Score: 0</div>
 				<div id="best-score" style="margin-left:12px;">Best: 0</div>
 			</div>
-			<div id="frenzy-banner" class="hidden">FRENZY! +5s paused  All clicks +1</div>
+			<div id="frenzy-banner" class="hidden">FRENZY! +5s paused — All clicks +1</div>
 			<div id="game-area"></div>
 			<div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
 				<button id="game-exit">Exit Game</button>
@@ -141,9 +142,7 @@
 			</div>
 		</div>
 	</div>
-	<script src=
-"https://momentjs.com/downloads/moment-with-locales.min.js">
-	</script>
+	<script src="https://momentjs.com/downloads/moment-with-locales.min.js"></script>
 	<script src="script.js"></script>
 
 	<!-- Settings Modal -->
@@ -221,7 +220,7 @@
 				'luxembourg','卢森堡','malta','马耳他'
 			]);
 
-			// 国家名（中英常见写法）→ 首都及国家信息
+			// Country name (EN/ZH common variants) → capital
 			const capitals = {
 				// 美国
 				'united states':'Washington, US','usa':'Washington, US','us':'Washington, US','america':'Washington, US','美国':'Washington, US',
@@ -380,39 +379,32 @@
 		})();
 	</script>
 	<script>
-		// 背景视频淡入，避免闪烁（隐藏至首帧就绪，双 RAF 后再显示）
+		// Background video anti-flicker: hide until ready, then show via double RAF
 		(function fixBgFlicker() {
 			var vid = document.getElementById('weather-video');
 			if (!vid) return;
 
 			function revealSmooth() {
-				// 双 RAF 确保样式与帧队列稳定再显示
 				requestAnimationFrame(function(){
 					requestAnimationFrame(function(){
 						vid.style.visibility = 'visible';
-						if (!vid.classList.contains('show')) vid.classList.add('show');
+						// 将 show 改为 visible
+						if (!vid.classList.contains('visible')) vid.classList.add('visible');
 					});
 				});
 			}
-
 			function tryPlay() {
-				// 某些浏览器需要显式 play 才开始渲染
 				var p = vid.play && vid.play();
 				if (p && typeof p.then === 'function') {
-					p.then(function(){ /* playing */ }).catch(function(){ /* autoplay 失败也保持 poster */ });
+					p.then(function(){}).catch(function(){});
 				}
 			}
-
-			function onReady() {
-				tryPlay();
-				revealSmooth();
-			}
+			function onReady() { tryPlay(); revealSmooth(); }
 
 			vid.addEventListener('loadedmetadata', onReady, { once: true });
 			vid.addEventListener('loadeddata', onReady, { once: true });
 			vid.addEventListener('canplay', onReady, { once: true });
 
-			// 超时兜底：若 1.5s 后已可渲染则显示；否则维持 poster 与静态背景
 			setTimeout(function(){
 				if (vid.readyState >= 2) onReady();
 			}, 1500);
