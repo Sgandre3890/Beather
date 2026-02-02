@@ -51,6 +51,10 @@
 	
 	<!-- Background video (looping MP4) -->
 	<div id="page-bg" class="page-bg"></div>
+	<!-- 先渲染音频，再渲染视频 -->
+	<audio id="weather-audio" class="weather-audio" loop>
+		<source src="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
+	</audio>
 	<video id="weather-video" class="weather-video" autoplay muted loop playsinline preload="auto" poster="../Images/weatherbackground/background.jpg" style="visibility:hidden;">
 		<source src="../Images/weatherbackground/background.mp4" type="video/mp4">
 	</video>
@@ -94,11 +98,6 @@
 	</div>
 
 
-	<!-- Background audio -->
-	<audio id="weather-audio" class="weather-audio" loop>
-		<source src="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
-	</audio>
-
 	<!-- Control buttons (bottom-right) -->
 	<div class="controls">
 		<div style="display: flex; gap: 8px; align-items: center;">
@@ -139,6 +138,9 @@
 				<p id="temperature" data-i18n="label.temperature"></p>
 				<p id="description" data-i18n="label.description"></p>
 				<p id="wind-speed" data-i18n="label.wind"></p>
+				<!-- 删除湿度与气压 -->
+				<!-- (removed) <p id="humidity" data-i18n="label.humidity"></p> -->
+				<!-- (removed) <p id="pressure" data-i18n="label.pressure"></p> -->
 			</div>
 		</div>
 	</div>
@@ -151,23 +153,43 @@
 			<h2 data-i18n="settings.title">Settings</h2>
 			<div class="settings-section">
 				<h3 data-i18n="settings.media">Media</h3>
-				<label class="settings-row">
-					<input type="checkbox" id="set-audio-enabled" />
-					<span data-i18n="settings.audio">Enable Audio</span>
-				</label>
+				<!-- 对调显示顺序：先视频，再音频 -->
 				<label class="settings-row">
 					<input type="checkbox" id="set-video-enabled" />
 					<span data-i18n="settings.video">Enable Background Video</span>
 				</label>
 				<label class="settings-row">
+					<input type="checkbox" id="set-audio-enabled" />
+					<span data-i18n="settings.audio">Enable Audio</span>
+				</label>
+				<label class="settings-row">
 					<span data-i18n="settings.volume">Volume</span>
 					<input type="range" id="set-volume" min="0" max="100" step="1" style="width:180px;margin-left:10px;" />
 				</label>
-				<label class="settings-row">
-					<span data-i18n="settings.display">Display</span>
-					<label style="margin-left:10px;"><input type="checkbox" id="set-display-temp" checked /> <span data-i18n="btn.showTemp">Show Temperature</span></label>
-					<label style="margin-left:10px;"><input type="checkbox" id="set-display-wind" checked /> <span data-i18n="btn.showWind">Show Wind</span></label>
-				</label>
+			</div>
+
+			<!-- 替换为 layers 风格的 Display 面板 -->
+			<div class="settings-section">
+				<h3 data-i18n="settings.display">Display</h3>
+				<div id="display-panel" style="position:relative;">
+					<button id="display-toggle" class="mini-btn" title="Display" style="padding:6px 10px;border-radius:8px;" aria-expanded="false">
+						<!-- 文案由脚本按语言填充 -->
+					</button>
+					<div id="display-menu" style="margin-top:6px;background:rgba(255,255,255,0.95);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.18);padding:8px 10px;min-width:220px;display:none;">
+						<label style="display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:14px;">
+							<input type="checkbox" id="set-display-temp"/>
+							<span data-i18n="btn.showTemp">Show Temperature</span>
+						</label>
+						<label style="display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:14px;">
+							<input type="checkbox" id="set-display-wind"/>
+							<span data-i18n="btn.showWind">Show Wind</span>
+						</label>
+						<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+							<button id="display-select-all" class="mini-btn" data-i18n="btn.selectAll">Select All</button>
+							<button id="display-select-none" class="mini-btn" data-i18n="btn.selectNone">Select None</button>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			<div class="settings-section">
@@ -410,5 +432,365 @@
 			}, 1500);
 		})();
 	</script>
+
+	<!-- Fallback bindings to ensure Settings modal opens and weather search works -->
+	<script>
+		(function setupFallbackUI(){
+			// Settings modal fallback
+			var modal = document.getElementById('settings-modal');
+			var btn = document.getElementById('settings-btn');
+			var closeBtn = document.getElementById('settings-cancel') || document.getElementById('settings-close');
+			var saveBtn = document.getElementById('settings-save');
+
+			function openModal(){
+				if (!modal) return;
+				// remove hidden class and show
+				modal.classList.remove('hidden');
+				modal.style.display = 'flex';
+			}
+			function closeModal(){
+				if (!modal) return;
+				modal.style.display = 'none';
+				modal.classList.add('hidden');
+			}
+
+			if (btn && !btn._fallbackBound) {
+				btn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+				btn._fallbackBound = true;
+			}
+			if (closeBtn && !closeBtn._fallbackBound) {
+				closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal(); });
+				closeBtn._fallbackBound = true;
+			}
+			if (modal) {
+				modal.addEventListener('click', function(e){ if (e.target === modal) closeModal(); });
+			}
+			if (saveBtn && !saveBtn._fallbackBound) {
+				saveBtn.addEventListener('click', function(){ closeModal(); });
+				saveBtn._fallbackBound = true;
+			}
+
+			// Weather search fallback
+			var input = document.getElementById('city-input');
+			var searchBtn = document.getElementById('city-input-btn');
+
+			function doSearch(){
+				var city = (input && input.value || '').trim();
+				if (!city) return;
+				try {
+					// Prefer script.js implementation if available
+					var lang = (window.getLang && window.getLang()) || 'en';
+					var units = (window.getPreferredUnits && window.getPreferredUnits(lang)) || 'auto';
+					if (typeof window.weatherFn === 'function') {
+						window.weatherFn(city, { lang: lang, units: units });
+					} else {
+						// Minimal fetch (fallback) if weatherFn unavailable
+						console.warn('weatherFn not available; fallback disabled.');
+					}
+				} catch (e) {
+					console.warn('Search fallback error:', e);
+				}
+			}
+
+			if (searchBtn && !searchBtn._fallbackBound) {
+				searchBtn.addEventListener('click', function(e){ e.preventDefault(); doSearch(); }, false);
+				searchBtn._fallbackBound = true;
+			}
+			if (input && !input._fallbackBound) {
+				input.addEventListener('keydown', function(e){
+					if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+				}, false);
+				input._fallbackBound = true;
+			}
+		})();
+	</script>
+
+	<!-- Robust fallback: ensure all Settings buttons and controls work (staged apply) -->
+	<script>
+		(function ensureSettingsWorks(){
+			var modal = document.getElementById('settings-modal');
+			if (!modal) return;
+
+			var btnOpen = document.getElementById('settings-btn');
+			var btnCancel = document.getElementById('settings-cancel');
+			var btnSave = document.getElementById('settings-save');
+			var btnRestore = document.getElementById('settings-restore');
+			var btnDetect = document.getElementById('set-detect-now');
+			var btnFetch = document.getElementById('set-fetch-city');
+
+			// Inputs
+			var chkAudio = document.getElementById('set-audio-enabled');
+			var chkVideo = document.getElementById('set-video-enabled');
+			var rngVol   = document.getElementById('set-volume');
+			var selLang  = document.getElementById('set-language');
+			var selUnits = document.getElementById('set-units');
+			var chkAuto  = document.getElementById('set-auto-detect');
+			var txtCity  = document.getElementById('set-manual-city');
+			// 仅保留温度/风速
+			var chkShowTemp = document.getElementById('set-display-temp');
+			var chkShowWind = document.getElementById('set-display-wind');
+			// 删除湿度/气压
+			// var chkShowHumidity = document.getElementById('set-display-humidity');
+			// var chkShowPressure = document.getElementById('set-display-pressure');
+
+			var audioEl = document.getElementById('weather-audio');
+			var videoEl = document.getElementById('weather-video');
+
+			function lsGet(k, def){ var v = localStorage.getItem(k); return v == null ? def : v; }
+			function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(_){ } }
+
+			// 快照不含湿度/气压
+			function makeSnapshot(){
+				return {
+					audioEnabled: lsGet('beather_audio','true') !== 'false',
+					videoEnabled: lsGet('beather_bgvideo','true') !== 'false',
+					volume: parseFloat(lsGet('beather_volume','0.6') || '0.6'),
+					lang: lsGet('beather_lang','en'),
+					units: lsGet('beather_units','auto'),
+					autoDetect: lsGet('beather_autoDetect','false') === 'true',
+					lastCity: lsGet('beather_lastCity','') || '',
+					showTemp: lsGet('beather_show_temp','true') !== 'false',
+					showWind: lsGet('beather_show_wind','true') !== 'false'
+				};
+			}
+			function applySnapshotToUI(snap){
+				if (!snap) return;
+				if (chkAudio) chkAudio.checked = !!snap.audioEnabled;
+				if (chkVideo) chkVideo.checked = !!snap.videoEnabled;
+				if (rngVol) rngVol.value = String(Math.round((isFinite(snap.volume)?snap.volume:0.6) * 100));
+				if (selLang) selLang.value = snap.lang || 'en';
+				if (selUnits) selUnits.value = snap.units || 'auto';
+				if (chkAuto) chkAuto.checked = !!snap.autoDetect;
+				if (txtCity) txtCity.value = snap.lastCity || '';
+				if (chkShowTemp) chkShowTemp.checked = !!snap.showTemp;
+				if (chkShowWind) chkShowWind.checked = !!snap.showWind;
+			}
+			function applySnapshotToMedia(snap){
+				if (!snap) return;
+				// 仅在 Cancel 时使用，恢复打开设置前的效果
+				if (audioEl) {
+					audioEl.volume = Math.min(1, Math.max(0, snap.volume || 0.6));
+					if (snap.audioEnabled) {
+						var p = audioEl.play && audioEl.play(); if (p && p.then) p.then(function(){}).catch(function(){});
+					} else { audioEl.pause && audioEl.pause(); }
+				}
+				if (videoEl) {
+					if (snap.videoEnabled) {
+						videoEl.classList.add('visible'); videoEl.style.visibility = 'visible';
+						var vp = videoEl.play && videoEl.play(); if (vp && vp.then) vp.then(function(){}).catch(function(){});
+					} else {
+						videoEl.classList.remove('visible'); videoEl.style.visibility = 'hidden'; videoEl.pause && videoEl.pause();
+					}
+				}
+				// 显示项只剩温度与风速
+				var tempEl = document.getElementById('temperature'); if (tempEl) tempEl.style.display = snap.showTemp ? '' : 'none';
+				var windEl = document.getElementById('wind-speed'); if (windEl) windEl.style.display = snap.showWind ? '' : 'none';
+			}
+
+			function openModal(){
+				// 建立快照并填充 UI，不应用到媒体（待 Save）
+				snapshot = makeSnapshot();
+				applySnapshotToUI(snapshot);
+				modal.classList.remove('hidden'); modal.style.display = 'flex';
+			}
+			function closeModal(){ modal.style.display = 'none'; modal.classList.add('hidden'); }
+
+			// Open/Close/Cancel
+			if (btnOpen && !btnOpen._sf) { btnOpen.addEventListener('click', function(e){ e.preventDefault(); openModal(); }); btnOpen._sf = true; }
+			if (btnCancel && !btnCancel._sf){ btnCancel.addEventListener('click', function(e){
+				e.preventDefault();
+				// 恢复到打开前的效果
+				applySnapshotToMedia(snapshot);
+				closeModal();
+			}); btnCancel._sf = true; }
+			modal.addEventListener('click', function(e){ if (e.target === modal) { applySnapshotToMedia(snapshot); closeModal(); } });
+
+			// Detect Now（不保存，仅触发一次）
+			if (btnDetect && !btnDetect._sf) {
+				btnDetect.addEventListener('click', function(e){
+					e.preventDefault();
+					if (typeof window.detectLocationAndFetch === 'function') window.detectLocationAndFetch();
+				}); btnDetect._sf = true;
+			}
+
+			// Fetch Weather by manual city（不保存，仅触发一次）
+			if (btnFetch && !btnFetch._sf) {
+				btnFetch.addEventListener('click', function(e){
+					e.preventDefault();
+					var city = (txtCity && txtCity.value || '').trim();
+					if (!city) return;
+					var lang = (selLang && selLang.value) || 'en';
+					var unitsPref = (selUnits && selUnits.value) || 'auto';
+					var effUnits = (unitsPref === 'auto' && typeof window.getPreferredUnits === 'function') ? window.getPreferredUnits(lang) : unitsPref;
+					if (typeof window.weatherFn === 'function') window.weatherFn(city, { lang: lang, units: effUnits });
+				}); btnFetch._sf = true;
+			}
+
+			// Restore Defaults（仅更新 UI，不立即应用；需 Save）
+			if (btnRestore && !btnRestore._sf) {
+				btnRestore.addEventListener('click', function(e){
+					e.preventDefault();
+					applySnapshotToUI({
+						audioEnabled: true,
+						videoEnabled: true,
+						volume: 0.6,
+						lang: 'en',
+						units: 'auto',
+						autoDetect: false,
+						lastCity: '',
+						showTemp: true,
+						showWind: true
+					});
+				}); btnRestore._sf = true;
+			}
+
+			// Save（写入 localStorage 并应用到媒体/显示）
+			if (btnSave && !btnSave._sf) {
+				btnSave.addEventListener('click', function(e){
+					e.preventDefault();
+					var audio = !!(chkAudio && chkAudio.checked);
+					var video = !!(chkVideo && chkVideo.checked);
+					var volPct = parseInt((rngVol && rngVol.value) || '60', 10);
+					var lang = (selLang && selLang.value) || 'en';
+					var units = (selUnits && selUnits.value) || 'auto';
+					var autoDetect = !!(chkAuto && chkAuto.checked);
+					var city = (txtCity && txtCity.value || '').trim();
+					var showTemp = !!(chkShowTemp && chkShowTemp.checked);
+					var showWind = !!(chkShowWind && chkShowWind.checked);
+					// 删除湿度/气压变量
+
+					// persist（移除湿度/气压）
+					lsSet('beather_audio', String(audio));
+					lsSet('beather_bgvideo', String(video));
+					lsSet('beather_volume', String(vol));
+					lsSet('beather_lang', lang);
+					lsSet('beather_units', units);
+					lsSet('beather_autoDetect', String(autoDetect));
+					if (city) lsSet('beather_lastCity', city);
+					lsSet('beather_show_temp', String(showTemp));
+					lsSet('beather_show_wind', String(showWind));
+					// (removed) beather_show_humidity / beather_show_pressure
+
+					// apply display（仅温度/风速）
+					var tempEl = document.getElementById('temperature'); if (tempEl) tempEl.style.display = showTemp ? '' : 'none';
+					var windEl = document.getElementById('wind-speed'); if (windEl) windEl.style.display = showWind ? '' : 'none';
+
+					// apply i18n & refresh weather if requested
+					if (typeof window.applyI18n === 'function') window.applyI18n(lang);
+					var effUnits = (units === 'auto' && typeof window.getPreferredUnits === 'function') ? window.getPreferredUnits(lang) : units;
+					if (autoDetect && typeof window.detectLocationAndFetch === 'function') {
+						window.detectLocationAndFetch();
+					} else if (city && typeof window.weatherFn === 'function') {
+						window.weatherFn(city, { lang: lang, units: effUnits });
+					}
+
+					closeModal();
+				}); btnSave._sf = true;
+			}
+		})();
+	</script>
+
+	<!-- 删除与湿度/气压相关的所有补丁与文案刷新脚本 -->
+	<!-- (removed) i18nDisplayPanelOnce / wireDisplayPanelFixes humidity/pressure labels -->
+	<!-- (removed) formatHumidityPressure, patchApplyPrefixesOnSave, defaults for humidity/pressure -->
+
+	<!-- 保留 Display 面板交互：仅控制温度/风速 + 全选/全不选 -->
+	<script>
+		(function bindDisplayPanelOnModalOpen(){
+			var modal = document.getElementById('settings-modal');
+			var btnOpen = document.getElementById('settings-btn');
+
+			function currentDisplayTitle(){
+				var h3 = modal && modal.querySelector('h3[data-i18n="settings.display"]');
+				var txt = (h3 && h3.textContent || '').trim();
+				return txt || 'Display';
+			}
+			function flag(key){ return localStorage.getItem(key) !== 'false'; }
+
+			function setupDisplayPanel(){
+				var toggle = document.getElementById('display-toggle');
+				var menu   = document.getElementById('display-menu');
+				var btnAll  = document.getElementById('display-select-all');
+				var btnNone = document.getElementById('display-select-none');
+				var chkTemp = document.getElementById('set-display-temp');
+				var chkWind = document.getElementById('set-display-wind');
+				if (!toggle || !menu) return;
+
+				// 同步勾选（仅温度/风速）
+				if (chkTemp) chkTemp.checked = flag('beather_show_temp');
+				if (chkWind) chkWind.checked = flag('beather_show_wind');
+
+				function setExpanded(exp){
+					var title = currentDisplayTitle();
+					toggle.setAttribute('aria-expanded', exp ? 'true' : 'false');
+					toggle.textContent = (exp ? (title + ' ▾') : (title + ' ▸'));
+					menu.style.display = exp ? 'block' : 'none';
+				}
+				setExpanded(false);
+
+				if (!toggle._dlBound) {
+					toggle.addEventListener('click', function(e){
+						e.preventDefault(); e.stopPropagation();
+						var exp = toggle.getAttribute('aria-expanded') === 'true';
+						setExpanded(!exp);
+					}, { capture: true });
+					toggle._dlBound = true;
+				}
+
+				// 全选/全不选：仅作用于温度与风速
+				function setAll(val){
+					if (chkTemp) chkTemp.checked = !!val;
+					if (chkWind) chkWind.checked = !!val;
+				}
+				if (btnAll && !btnAll._dlBound) {
+					btnAll.addEventListener('click', function(e){
+						e.preventDefault(); e.stopPropagation();
+						setAll(true);
+						btnAll.setAttribute('aria-pressed','true');
+						btnNone && btnNone.setAttribute('aria-pressed','false');
+					});
+					btnAll._dlBound = true;
+				}
+				if (btnNone && !btnNone._dlBound) {
+					btnNone.addEventListener('click', function(e){
+						e.preventDefault(); e.stopPropagation();
+						setAll(false);
+						btnNone.setAttribute('aria-pressed','true');
+						btnAll && btnAll.setAttribute('aria-pressed','false');
+					});
+					btnNone._dlBound = true;
+				}
+			}
+
+			function openModalAndSetup(e){
+				if (e) { e.preventDefault(); }
+				setTimeout(setupDisplayPanel, 0);
+			}
+			if (btnOpen && !btnOpen._dlOpenBound) {
+				btnOpen.addEventListener('click', openModalAndSetup);
+				btnOpen._dlOpenBound = true;
+			}
+			var modal = document.getElementById('settings-modal');
+			var observer = new MutationObserver(function(){
+				if (modal && modal.style.display !== 'none') setTimeout(setupDisplayPanel, 0);
+			});
+			if (modal) observer.observe(modal, { attributes: true, attributeFilter: ['class','style'] });
+		})();
+	</script>
+
+	<!-- 删除一次性默认中湿度/气压键，仅保留温度/风速 -->
+	<script>
+		(function initDisplayDefaultsOnce(){
+			try {
+				if (localStorage.getItem('beather_display_defaults_applied') !== 'true') {
+					localStorage.setItem('beather_show_temp','true');
+					localStorage.setItem('beather_show_wind','true');
+					localStorage.setItem('beather_display_defaults_applied','true');
+				}
+			} catch(_){}
+		})();
+	</script>
+
+	<!-- ...existing code... -->
 </body>
 </html>

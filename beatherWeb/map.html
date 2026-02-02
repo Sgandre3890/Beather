@@ -49,6 +49,18 @@
     .weather-details .wd-row { margin: 6px 0; }
     .weather-details .wd-sub { color:#666; font-size:12px; }
 
+    /* Bottom-left units selector (above language) */
+    .map-units {
+      position: fixed; left: 10px; bottom: 56px; z-index: 3002;
+      background: rgba(255,255,255,0.95); border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+      padding: 6px 8px; font: 500 12px/1.4 system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .map-units select {
+      border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; padding: 4px 6px; font-size: 12px; background: #fff;
+    }
+
     /* Bottom-left language selector */
     .map-lang {
       position: fixed; left: 10px; bottom: 10px; z-index: 3002;
@@ -92,6 +104,16 @@
     <div class="wd-row wd-sub" id="wd-sub">—</div>
     <div class="wd-row" id="wd-temp">—</div>
     <div class="wd-row" id="wd-desc">—</div>
+  </div>
+
+  <!-- Units dropdown (bottom-left, above language) -->
+  <div class="map-units">
+    <span id="map-units-label">Units</span>
+    <select id="map-units-select">
+      <option value="auto">Auto</option>
+      <option value="metric">Metric (°C, km/h)</option>
+      <option value="imperial">Imperial (°F, mph)</option>
+    </select>
   </div>
 
   <!-- Bottom-left language selector -->
@@ -344,7 +366,7 @@
       }
     })();
 
-    // Map UI i18n: translate labels fully (no multi-language)
+    // ===== Units override (bottom-left) + i18n labels =====
     (function(){
       function normLang(v){
         v = (v || '').toLowerCase();
@@ -362,102 +384,67 @@
         return 'en';
       }
       const STRINGS = {
-        en: {
-          layers: 'Layers ▾',
-          temp: 'Temperature',
-          wind: 'Wind',
-          clouds: 'Clouds',
-          precip: 'Precipitation',
-          pressure: 'Sea level pressure',
-          cancel: 'Cancel',
-          viewDetails: 'View details',
-          country: 'Country',
-          temperature: 'Temperature',
-          weather: 'Weather',
-          toastWeatherFail: 'Failed to fetch weather. You can retry.',
-          toastLocateFail: 'Failed to locate place. You can retry.',
-          langLabel: 'Language'
-        },
-        zh_cn: {
-          layers: '图层 ▾',
-          temp: '气温',
-          wind: '风速',
-          clouds: '云层',
-          precip: '降水',
-          pressure: '海平面气压',
-          cancel: '取消',
-          viewDetails: '查看详情',
-          country: '国家/地区',
-          temperature: '气温',
-          weather: '天气',
-          toastWeatherFail: '获取天气失败，可重试。',
-          toastLocateFail: '定位失败，可重试。',
-          langLabel: '语言'
-        },
-        es: {
-          layers: 'Capas ▾',
-          temp: 'Temperatura',
-          wind: 'Viento',
-          clouds: 'Nubes',
-          precip: 'Precipitación',
-          pressure: 'Presión a nivel del mar',
-          cancel: 'Cancelar',
-          viewDetails: 'Ver detalles',
-          country: 'País',
-          temperature: 'Temperatura',
-          weather: 'Tiempo',
-          toastWeatherFail: 'No se pudo obtener el clima. Puedes reintentar.',
-          toastLocateFail: 'No se pudo localizar el lugar. Puedes reintentar.',
-          langLabel: 'Idioma'
-        }
+        en: { units: 'Units', unitsAuto: 'Auto', unitsMetric: 'Metric (°C, km/h)', unitsImperial: 'Imperial (°F, mph)', langLabel:'Language', wind:'Wind', temperature:'Temperature', weather:'Weather', country:'Country', layers:'Layers ▾', temp:'Temperature', clouds:'Clouds', precip:'Precipitation', pressure:'Sea level pressure', viewDetails:'View details' },
+        zh_cn: { units: '单位', unitsAuto: '自动', unitsMetric: '公制（°C，km/h）', unitsImperial: '英制（°F，mph）', langLabel:'语言', wind:'风速', temperature:'气温', weather:'天气', country:'国家/地区', layers:'图层 ▾', temp:'气温', clouds:'云层', precip:'降水', pressure:'海平面气压', viewDetails:'查看详情' },
+        es: { units: 'Unidades', unitsAuto: 'Auto', unitsMetric: 'Métrico (°C, km/h)', unitsImperial: 'Imperial (°F, mph)', langLabel:'Idioma', wind:'Viento', temperature:'Temperatura', weather:'Tiempo', country:'País', layers:'Capas ▾', temp:'Temperatura', clouds:'Nubes', precip:'Precipitación', pressure:'Presión a nivel del mar', viewDetails:'Ver detalles' }
       };
       function t(key){
         const lang = getLangPref();
         return (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key;
       }
-      function setLabelText(labelEl, text){
-        if (!labelEl) return;
-        // Ensure last child is a text node; otherwise append one
-        var last = labelEl.lastChild;
-        if (!last || last.nodeType !== Node.TEXT_NODE) {
-          labelEl.appendChild(document.createTextNode(' ' + text));
-        } else {
-          last.nodeValue = ' ' + text;
+
+      // Apply labels to units + language selectors
+      function applyI18nUnitsLang(){
+        const uLabel = document.getElementById('map-units-label');
+        const uSelect = document.getElementById('map-units-select');
+        if (uLabel) uLabel.textContent = t('units');
+        if (uSelect) {
+          uSelect.querySelector('option[value="auto"]').textContent = t('unitsAuto');
+          uSelect.querySelector('option[value="metric"]').textContent = t('unitsMetric');
+          uSelect.querySelector('option[value="imperial"]').textContent = t('unitsImperial');
         }
-      }
-      function applyI18n(){
-        const btn = document.getElementById('layers-toggle');
-        if (btn) { btn.textContent = t('layers'); btn.title = t('layers'); }
-        setLabelText(document.querySelector('#overlay-temp')?.parentElement, t('temp'));
-        setLabelText(document.querySelector('#overlay-wind')?.parentElement, t('wind'));
-        setLabelText(document.querySelector('#layer-clouds')?.parentElement, t('clouds'));
-        setLabelText(document.querySelector('#layer-precip')?.parentElement, t('precip'));
-        setLabelText(document.querySelector('#layer-pressure')?.parentElement, t('pressure'));
         const langLabel = document.getElementById('map-lang-label');
         if (langLabel) langLabel.textContent = t('langLabel');
       }
-      applyI18n();
-      // Short polling to sync with home page language changes quickly
-      (function pollLangSync(){
-        let tries = 0; const timer = setInterval(() => {
-          applyI18n();
-          if (++tries >= 10) clearInterval(timer);
-        }, 500);
-      })();
+
+      // Units preference: map_units_override -> set-units -> auto by country
+      function getUnitsPrefRaw(){
+        const localOverride = (localStorage.getItem('map_units_override') || '').toLowerCase();
+        if (localOverride === 'metric' || localOverride === 'imperial' || localOverride === 'auto') return localOverride;
+        const homePref = (localStorage.getItem('set-units') || 'auto').toLowerCase();
+        return (homePref === 'metric' || homePref === 'imperial') ? homePref : 'auto';
+      }
+      function decideUnits(autoOrUnits, country){
+        if (autoOrUnits !== 'auto') return autoOrUnits;
+        return (country==='US'||country==='LR'||country==='MM') ? 'imperial' : 'metric';
+      }
+
+      // Bind units selector
+      const uSelect = document.getElementById('map-units-select');
+      if (uSelect) {
+        // Initialize selector to current pref
+        uSelect.value = getUnitsPrefRaw();
+        uSelect.addEventListener('change', function(){
+          localStorage.setItem('map_units_override', uSelect.value);
+          // Notify other blocks
+          window.dispatchEvent(new StorageEvent('storage', { key:'map_units_override', newValue: uSelect.value }));
+        });
+      }
+
+      // Expose helpers so weather block can use unified units
+      window.BeatherMapUnits = { getUnitsPrefRaw, decideUnits, t, getLangPref, applyI18nUnitsLang };
+
+      // Initial i18n for units/lang
+      applyI18nUnitsLang();
+      // Keep labels synced for a short time and on storage changes
+      (function poll(){ let i=0; const tm=setInterval(()=>{ applyI18nUnitsLang(); if(++i>=6) clearInterval(tm); },500); })();
       window.addEventListener('storage', function(e){
-        if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) applyI18n();
+        if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) applyI18nUnitsLang();
       });
-      // Expose for upper module
-      window.BeatherMapI18n = { t, getLangPref, applyI18n };
     })();
 
-    // Popups and details: quick weather preview in popup; full details in panel
+    // Popups and details: use unified units helpers
     (function(){
-      var API_KEY = '04b2c70f5678cb788cb9d62c0325ef32';
-      var lastTs = 0;
-      var downPt = null, lastMoveDist = 0;
-      var CLICK_PX_THRESH = 8, CLICK_THROTTLE_MS = 500;
-
       // Toast helpers
       var toastEl;
       function ensureToast(){
@@ -485,18 +472,12 @@
       var wdClose = document.getElementById('wd-close');
       if (wdClose) wdClose.addEventListener('click', function(ev){ ev.preventDefault(); panel.classList.remove('show'); });
 
-      // Language/units helpers
-      function normLang(v){ return (window.BeatherMapI18n ? window.BeatherMapI18n.getLangPref() : 'en'); }
-      function getLangPref(){ return (window.BeatherMapI18n ? window.BeatherMapI18n.getLangPref() : 'en'); }
-      function getUnitsPref(){
-        var v = (localStorage.getItem('set-units') || 'auto').toLowerCase();
-        return (v==='metric'||v==='imperial'||v==='auto') ? v : 'auto';
-      }
+      // Language/units helpers (replaced)
+      function getLangPref(){ return (window.BeatherMapUnits ? window.BeatherMapUnits.getLangPref() : 'en'); }
+      function getUnitsPrefRaw(){ return (window.BeatherMapUnits ? window.BeatherMapUnits.getUnitsPrefRaw() : 'auto'); }
       function decideUnits(autoOrUnits, country){
-        if (autoOrUnits !== 'auto') return autoOrUnits;
-        return (country==='US'||country==='LR'||country==='MM') ? 'imperial' : 'metric';
+        return (window.BeatherMapUnits ? window.BeatherMapUnits.decideUnits(autoOrUnits, country) : (autoOrUnits==='imperial'?'imperial':'metric'));
       }
-      function shouldDirect(){ return (localStorage.getItem('map_click_action') === 'direct'); }
 
       // Reverse geocode (original simple behavior)
       function reverseGeo(lat, lon){
@@ -593,9 +574,9 @@
         const html = ''
           + '<div style="min-width:220px">'
           +   '<div style="font-weight:700;margin-bottom:6px;">'+title+'</div>'
-          +   '<div style="margin-bottom:10px;">'+window.BeatherMapI18n.t('weather')+': '+descLine+'</div>'
+          +   '<div style="margin-bottom:10px;">'+window.BeatherMapUnits.t('weather')+': '+descLine+'</div>'
           +   '<div style="display:flex;justify-content:flex-end;gap:8px;">'
-          +     '<button id="map-pop-go" style="padding:4px 10px;">'+window.BeatherMapI18n.t('viewDetails')+'</button>'
+          +     '<button id="map-pop-go" style="padding:4px 10px;">'+window.BeatherMapUnits.t('viewDetails')+'</button>'
           +   '</div>'
           + '</div>';
         const pop = L.popup({ closeButton:true, autoClose:true }).setLatLng(latlng).setContent(html).openOn(map);
@@ -614,15 +595,15 @@
         const windUnit = units==='imperial' ? 'mph' : 'km/h';
         // Title and country (labels in current language)
         if (wdTitle) wdTitle.textContent = names.en || 'Unknown';
-        if (wdSub) wdSub.textContent = names.country ? (window.BeatherMapI18n.t('country') + ': ' + names.country) : '';
+        if (wdSub) wdSub.textContent = names.country ? (window.BeatherMapUnits.t('country') + ': ' + names.country) : '';
         // Temperature
         if (wdTemp) wdTemp.textContent = (weather && weather.temp!=null)
-          ? (window.BeatherMapI18n.t('temperature') + ': ' + weather.temp + unitChar)
-          : (window.BeatherMapI18n.t('temperature') + ': —');
+          ? (window.BeatherMapUnits.t('temperature') + ': ' + weather.temp + unitChar)
+          : (window.BeatherMapUnits.t('temperature') + ': —');
         // Weather
         if (wdDesc) wdDesc.textContent = (weather && weather.desc)
-          ? (window.BeatherMapI18n.t('weather') + ': ' + weather.desc)
-          : (window.BeatherMapI18n.t('weather') + ': —');
+          ? (window.BeatherMapUnits.t('weather') + ': ' + weather.desc)
+          : (window.BeatherMapUnits.t('weather') + ': —');
         // Wind speed in a separate row
         const windLine = (weather && weather.wind!=null) ? (Math.round(weather.wind)+' '+windUnit) : '—';
         let windRow = document.getElementById('wd-wind-row');
@@ -632,7 +613,7 @@
           windRow.className = 'wd-row';
           wdDesc && wdDesc.parentNode.insertBefore(windRow, wdDesc.nextSibling);
         }
-        windRow.textContent = window.BeatherMapI18n.t('wind') + ': ' + windLine;
+        windRow.textContent = window.BeatherMapUnits.t('wind') + ': ' + windLine;
 
         panel.classList.add('show');
       }
@@ -660,27 +641,46 @@
         reverseGeo(lat, lon)
           .then(function(loc){
             var names = buildNames(loc);
-            var units = decideUnits(getUnitsPref(), loc.country);
+            var units = decideUnits(getUnitsPrefRaw(), loc.country);
             return fetchWeatherWithFallback(lat, lon, units, lang)
-              .then(function(w){
-                if (shouldDirect()) openDetailsPanel(e.latlng, names, w, units);
-                else openPopup(e.latlng, names, w, units);
-              })
-              .catch(function(){
-                if (shouldDirect()) openDetailsPanel(e.latlng, names, null, units);
-                else { openPopup(e.latlng, names, null, units); showToast('toastWeatherFail', 1600); }
-              });
+              .then(function(w){ openPopup(e.latlng, names, w, units); })
+              .catch(function(){ openPopup(e.latlng, names, null, units); showToast('toastWeatherFail', 1600); });
           })
           .catch(function(){
             var names = { en: 'Unknown', country: '' };
-            var units = decideUnits(getUnitsPref(), null);
+            var units = decideUnits(getUnitsPrefRaw(), null);
             fetchWeatherWithFallback(lat, lon, units, lang)
-              .then(function(w){
-                if (shouldDirect()) openDetailsPanel(e.latlng, names, w, units);
-                else openPopup(e.latlng, names, w, units);
-              })
-              .catch(function(){
-                if (shouldDirect()) openDetailsPanel(e.latlng, names, null, units);
+              .then(function(w){ openPopup(e.latlng, names, w, units); })
+              .catch(function(){ openPopup(e.latlng, names, null, units); showToast('toastLocateFail', 1600); });
+          });
+      });
+
+      // When language changes, update panel labels if open (keep numeric values)
+      window.addEventListener('storage', function(e){
+        if (['beather_language','settings.language','set-language'].includes(e.key)) {
+          if (panel && panel.classList.contains('show')) {
+            if (wdSub && wdSub.textContent) wdSub.textContent = wdSub.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('country') + ':');
+            if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('temperature') + ':');
+            var windRow = document.getElementById('wd-wind-row');
+            if (windRow) windRow.textContent = window.BeatherMapUnits.t('wind') + ': ' + windRow.textContent.replace(/^.*?:\s*/, '');
+            if (wdDesc) wdDesc.textContent = wdDesc.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('weather') + ':');
+          }
+        }
+        // Units change: recompute unit labels for open panel (keep numeric values)
+        if (e.key === 'map_units_override' && panel && panel.classList.contains('show')) {
+          var country = (wdSub && wdSub.textContent.split(':')[1] || '').trim();
+          var units = decideUnits(getUnitsPrefRaw(), country || null);
+          const unitChar = units==='imperial' ? '°F' : '°C';
+          const windUnit = units==='imperial' ? 'mph' : 'km/h';
+          if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/°[CF]/, unitChar);
+          var windRow = document.getElementById('wd-wind-row');
+          if (windRow) windRow.textContent = window.BeatherMapUnits.t('wind') + ': ' + windRow.textContent.replace(/(km\/h|mph)$/, windUnit);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
                 else { openPopup(e.latlng, names, null, units); showToast('toastLocateFail', 1600); }
               });
           });

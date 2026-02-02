@@ -417,3 +417,41 @@ nav a:focus, nav a:active { outline:none; }
 .location-btn.enabled {
     background-color: rgba(76, 175, 80, 0.9);
 }
+
+#display-folder { margin-top: 12px; }
+#display-panel { position: relative; }
+#display-toggle {
+  background: rgba(96,125,139,0.92);
+  color:#fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+#display-toggle[aria-expanded="true"] {
+  background: #e0f2ff;
+  border-color: rgba(33,150,243,0.35);
+}
+.display-content { padding: 8px 6px; border-left: 2px solid rgba(0,0,0,0.06); }
+/* 保持集合内 label 紧凑 */
+#display-list label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+#display-select-all, #display-select-none {
+  padding: 6px 10px;
+}
+#display-select-all[aria-pressed="true"],
+#display-select-none[aria-pressed="true"] {
+  background: #d0e8ff;
+}
+#display-menu {
+  margin-top:6px;
+  background: rgba(255,255,255,0.95);
+  border-radius:8px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.18);
+  padding:8px 10px;
+  min-width:220px;
+}
