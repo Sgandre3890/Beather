@@ -344,7 +344,7 @@ const countryNames = {
 	'AU': { en: 'Australia', zh_cn: '澳大利亚', es: 'Australia' }
 };
 
-// Default background and audio (video is now an MP4 loop)
+// Default background and audio (video is an MP4 loop)
 // Note: audio filename uses capital 'B' per repository: 'Backgroundmusic.mp3'
 const defaultTheme = { video: 'background.mp4', audio: 'Backgroundmusic.mp3' };
 
@@ -476,7 +476,7 @@ function initSplashScreen() {
 }
 
 $(document).ready(function () {
-	// Detect Images base as early as possible so splash/logo/media paths resolve both in repo and in downloaded zips
+	// Detect Images base as early as possible so paths resolve both in repo and in downloaded zips
 	detectImagesBase(function(){
 		try { rewriteDOMAssetPaths(); } catch(_){}
 	});

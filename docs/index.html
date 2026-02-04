@@ -30,9 +30,9 @@
 		}
 		/* Background container as placeholder; prevent repaint jitter */
 		.page-bg {
-			/* 可设置一张静态背景图作为占位 */
+			/* You can set a static background image as a placeholder */
 			background: #000 url('../Images/weatherbackground/background.jpg') center/cover no-repeat;
-			/* 防重绘抖动 */
+			/* Prevent repaint jitter */
 			will-change: transform;
 			backface-visibility: hidden;
 			position: fixed;
@@ -40,6 +40,13 @@
 			z-index: -2;
 		}
 	</style>
+	<!-- Restore preload for weatherbackground and cloudspipes resources -->
+	<link rel="preload" as="image" href="../Images/weatherbackground/background.jpg">
+	<link rel="preload" as="video" href="../Images/weatherbackground/background.mp4" type="video/mp4">
+	<link rel="preload" as="audio" href="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
+	<link rel="preload" as="image" href="../Images/cloudspipes/pipe_top.png">
+	<link rel="preload" as="image" href="../Images/cloudspipes/pipe_bottom.png">
+	<link rel="preload" as="image" href="../Images/cloudspipes/cloud.png">
 </head>
 
 
@@ -51,13 +58,20 @@
 	
 	<!-- Background video (looping MP4) -->
 	<div id="page-bg" class="page-bg"></div>
-	<!-- 先渲染音频，再渲染视频 -->
+	<!-- Render audio first, then video -->
 	<audio id="weather-audio" class="weather-audio" loop>
 		<source src="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
 	</audio>
 	<video id="weather-video" class="weather-video" autoplay muted loop playsinline preload="auto" poster="../Images/weatherbackground/background.jpg" style="visibility:hidden;">
 		<source src="../Images/weatherbackground/background.mp4" type="video/mp4">
 	</video>
+
+	<!-- Asset placeholders for pipes and clouds (used by Flappy) -->
+	<div id="clouds-pipes-assets" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;">
+		<img id="cp-cloud" src="../Images/cloudspipes/cloud.png" alt="cloud">
+		<img id="cp-pipe-top" src="../Images/cloudspipes/pipe_top.png" alt="pipe top">
+		<img id="cp-pipe-bottom" src="../Images/cloudspipes/pipe_bottom.png" alt="pipe bottom">
+	</div>
 
 	<!-- Game selection menu -->
 	<div id="game-menu" class="hidden">
@@ -233,9 +247,10 @@
 			</div>
 		</div>
 	</div>
-	<!-- 在 body 结束前插入：命名规则与国家→首都映射 -->
+	<!-- Insert before body end: naming rules and country→capital mapping -->
 	<script>
 		(function () {
+			// Tiny states to keep original names (do not map to capitals)
 			const tinyStates = new Set([
 				'singapore','新加坡','monaco','摩纳哥','vatican city','梵蒂冈',
 				'san marino','圣马力诺','andorra','安道尔','liechtenstein','列支敦士登',
@@ -410,7 +425,7 @@
 				requestAnimationFrame(function(){
 					requestAnimationFrame(function(){
 						vid.style.visibility = 'visible';
-						// 将 show 改为 visible
+						// Change 'show' to 'visible'
 						if (!vid.classList.contains('visible')) vid.classList.add('visible');
 					});
 				});
@@ -791,6 +806,22 @@
 		})();
 	</script>
 
-	<!-- ...existing code... -->
+	<!-- 暴露统一的资源入口，供其他脚本读取 -->
+	<script>
+		(function exposeAssets(){
+			window.BeatherAssets = {
+				weatherbackground: {
+					poster: '../Images/weatherbackground/background.jpg',
+					video: '../Images/weatherbackground/background.mp4',
+					audio: '../Images/weatherbackground/Backgroundmusic.mp3'
+				},
+				cloudspipes: {
+					cloud: '../Images/cloudspipes/cloud.png',
+					pipeTop: '../Images/cloudspipes/pipe_top.png',
+					pipeBottom: '../Images/cloudspipes/pipe_bottom.png'
+				}
+			};
+		})();
+	</script>
 </body>
 </html>

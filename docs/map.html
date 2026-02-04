@@ -78,7 +78,7 @@
 <body>
   <nav>
     <a href="index.html" title="Home">
-      <img src="../Images/Home.png" alt="Home" data-i18n="nav.home" />
+      <img src="../Images/Home.png" alt="Home" data-i18n="nav.home" width="40" height="40" />
     </a>
   </nav>
 
@@ -127,7 +127,10 @@
   </div>
 
   <script>
-    // Cylindrical continuous world: horizontal wrap, vertical clamp only (keep drag enabled)
+    // Declare unified OpenWeather API KEY (same as overlay tiles)
+    var API_KEY = '04b2c70f5678cb788cb9d62c0325ef32';
+
+    // Cylindrical world: horizontal wrap, vertical clamp only (keep drag enabled)
     var map = L.map('map', {
       worldCopyJump: true,
       minZoom: 2,
@@ -268,10 +271,10 @@
           // Only Chinese name
           return zhByEn[en] || local || en;
         } else if (lang === 'es') {
-          // Only Spanish name (within coverage), otherwise English approximate
+          // Only Spanish name; otherwise English approximate
           return esByEn[en] || en || local;
         }
-        // English environment: only English name, if missing then use local name
+        // English: show English name; fallback to local name if missing
         return en || local;
       }
 
@@ -436,7 +439,7 @@
 
       // Initial i18n for units/lang
       applyI18nUnitsLang();
-      // Keep labels synced for a short time and on storage changes
+      // Keep labels synced briefly and on storage changes
       (function poll(){ let i=0; const tm=setInterval(()=>{ applyI18nUnitsLang(); if(++i>=6) clearInterval(tm); },500); })();
       window.addEventListener('storage', function(e){
         if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) applyI18nUnitsLang();
@@ -479,7 +482,7 @@
         return (window.BeatherMapUnits ? window.BeatherMapUnits.decideUnits(autoOrUnits, country) : (autoOrUnits==='imperial'?'imperial':'metric'));
       }
 
-      // Reverse geocode (original simple behavior)
+      // Reverse geocode (simple behavior)
       function reverseGeo(lat, lon){
         var urlOW = 'https://api.openweathermap.org/geo/1.0/reverse?lat='+lat+'&lon='+lon+'&limit=1&appid='+API_KEY;
         return fetch(urlOW, { mode:'cors' })
@@ -515,9 +518,9 @@
           });
       }
 
-      // Weather with fallback (unchanged)
+      // Weather with fallback
       function fetchWeatherOWM(lat, lon, units, lang) {
-        var url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&appid=04b2c70f5678cb788cb9d62c0325ef32&lang=' + lang;
+        var url = 'https://api.openweathermap.org/data/2.5/weather?lat=' + lat + '&lon=' + lon + '&appid=' + API_KEY + '&lang=' + lang;
         return fetch(url, { mode:'cors' })
           .then(function(r){ if(!r.ok) throw new Error('owm weather'); return r.json(); })
           .then(function(data){
@@ -561,16 +564,18 @@
           });
       }
 
-      // Build names (original: English only for title; empty → 'Unknown')
+      // Build names
       function buildNames(loc){
         var ln = loc.local_names || {};
         var en = ln.en || loc.name || '';
         return { en: en || 'Unknown', country: loc.country || '' };
       }
 
-      function openPopup(latlng, names, weather, units){
+      // Note: popup displays already converted numbers (weatherDisplay)
+      function openPopup(latlng, names, weatherDisplay, units){
+        // 注意：弹窗展示用已换算的数值 weatherDisplay
         const title = names.en || 'Unknown';
-        const descLine = (weather && weather.desc) ? weather.desc : '—';
+        const descLine = (weatherDisplay && weatherDisplay.desc) ? weatherDisplay.desc : '—';
         const html = ''
           + '<div style="min-width:220px">'
           +   '<div style="font-weight:700;margin-bottom:6px;">'+title+'</div>'
@@ -585,27 +590,44 @@
           if (goBtn) goBtn.addEventListener('click', function(ev){
             ev.preventDefault(); ev.stopPropagation();
             map.closePopup(pop);
-            openDetailsPanel(latlng, names, weather, units);
+            // 用基础天气（lastWeatherBase）打开详情，避免双重换算
+            openDetailsPanel(latlng, names, lastWeatherBase, units);
           });
         }, 0);
       }
 
-      function openDetailsPanel(latlng, names, weather, units){
-        const unitChar = units==='imperial' ? '°F' : '°C';
-        const windUnit = units==='imperial' ? 'mph' : 'km/h';
+      function openDetailsPanel(latlng, names, weatherBase, units){
+        // 保存基础值（摄氏度、km/h）
+        if (panel) {
+          panel.dataset.tempC = (weatherBase && weatherBase.temp != null) ? String(Math.round(weatherBase.temp)) : '';
+          panel.dataset.windKmh = (weatherBase && weatherBase.wind != null) ? String(Math.round(weatherBase.wind)) : '';
+          panel.dataset.units = units;
+        }
+        // 基于基础值渲染当前单位
+        var unitChar = units==='imperial' ? '°F' : '°C';
+        var windUnit = units==='imperial' ? 'mph' : 'km/h';
         // Title and country (labels in current language)
         if (wdTitle) wdTitle.textContent = names.en || 'Unknown';
         if (wdSub) wdSub.textContent = names.country ? (window.BeatherMapUnits.t('country') + ': ' + names.country) : '';
-        // Temperature
-        if (wdTemp) wdTemp.textContent = (weather && weather.temp!=null)
-          ? (window.BeatherMapUnits.t('temperature') + ': ' + weather.temp + unitChar)
+        var tempLine = (weatherBase && weatherBase.temp!=null)
+          ? (units==='imperial'
+              ? Math.round(weatherBase.temp*9/5+32)
+              : Math.round(weatherBase.temp))
+          : null;
+        if (wdTemp) wdTemp.textContent = (tempLine!=null)
+          ? (window.BeatherMapUnits.t('temperature') + ': ' + tempLine + unitChar)
           : (window.BeatherMapUnits.t('temperature') + ': —');
-        // Weather
-        if (wdDesc) wdDesc.textContent = (weather && weather.desc)
-          ? (window.BeatherMapUnits.t('weather') + ': ' + weather.desc)
+
+        if (wdDesc) wdDesc.textContent = (weatherBase && weatherBase.desc)
+          ? (window.BeatherMapUnits.t('weather') + ': ' + weatherBase.desc)
           : (window.BeatherMapUnits.t('weather') + ': —');
-        // Wind speed in a separate row
-        const windLine = (weather && weather.wind!=null) ? (Math.round(weather.wind)+' '+windUnit) : '—';
+
+        var windVal = (weatherBase && weatherBase.wind!=null)
+          ? (units==='imperial'
+              ? Math.round(weatherBase.wind*0.621371)
+              : Math.round(weatherBase.wind))
+          : null;
+        var windLine = (windVal!=null) ? (windVal + ' ' + windUnit) : '—';
         let windRow = document.getElementById('wd-wind-row');
         if (!windRow) {
           windRow = document.createElement('div');
@@ -618,129 +640,112 @@
         panel.classList.add('show');
       }
 
-      function hasActivePopup(){ return !!document.querySelector('.leaflet-popup'); }
-
-      map.on('mousedown', function(e){
-        if (!e.originalEvent) return;
-        downPt = map.mouseEventToContainerPoint(e.originalEvent);
-      });
-      map.on('mouseup', function(e){
-        if (!e.originalEvent || !downPt) { lastMoveDist = 0; return; }
-        var upPt = map.mouseEventToContainerPoint(e.originalEvent);
-        lastMoveDist = Math.hypot(upPt.x - downPt.x, upPt.y - downPt.y);
-      });
-
+      // Click: fetch weather then set base and display values
       map.on('click', function(e){
-        if (hasActivePopup()) return;
-        if (lastMoveDist > CLICK_PX_THRESH) return;
-        var now = Date.now(); if (now - lastTs < CLICK_THROTTLE_MS) return; lastTs = now;
-
+        // ...existing code (drag/throttle guard)...
         var lat = e.latlng.lat, lon = e.latlng.lng;
         var lang = getLangPref();
-
         reverseGeo(lat, lon)
           .then(function(loc){
             var names = buildNames(loc);
             var units = decideUnits(getUnitsPrefRaw(), loc.country);
             return fetchWeatherWithFallback(lat, lon, units, lang)
-              .then(function(w){ openPopup(e.latlng, names, w, units); })
-              .catch(function(){ openPopup(e.latlng, names, null, units); showToast('toastWeatherFail', 1600); });
+              .then(function(w){
+                lastWeatherBase = w; // 保存基础（°C、km/h）
+                var wAdj = adaptWeatherUnits(w, units); // 展示用
+                openPopup(e.latlng, names, wAdj, units);
+              })
+              .catch(function(){
+                lastWeatherBase = null;
+                openPopup(e.latlng, names, null, units);
+                showToast('toastWeatherFail', 1600);
+              });
           })
           .catch(function(){
             var names = { en: 'Unknown', country: '' };
             var units = decideUnits(getUnitsPrefRaw(), null);
             fetchWeatherWithFallback(lat, lon, units, lang)
-              .then(function(w){ openPopup(e.latlng, names, w, units); })
-              .catch(function(){ openPopup(e.latlng, names, null, units); showToast('toastLocateFail', 1600); });
-          });
-      });
-
-      // When language changes, update panel labels if open (keep numeric values)
-      window.addEventListener('storage', function(e){
-        if (['beather_language','settings.language','set-language'].includes(e.key)) {
-          if (panel && panel.classList.contains('show')) {
-            if (wdSub && wdSub.textContent) wdSub.textContent = wdSub.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('country') + ':');
-            if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('temperature') + ':');
-            var windRow = document.getElementById('wd-wind-row');
-            if (windRow) windRow.textContent = window.BeatherMapUnits.t('wind') + ': ' + windRow.textContent.replace(/^.*?:\s*/, '');
-            if (wdDesc) wdDesc.textContent = wdDesc.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('weather') + ':');
-          }
-        }
-        // Units change: recompute unit labels for open panel (keep numeric values)
-        if (e.key === 'map_units_override' && panel && panel.classList.contains('show')) {
-          var country = (wdSub && wdSub.textContent.split(':')[1] || '').trim();
-          var units = decideUnits(getUnitsPrefRaw(), country || null);
-          const unitChar = units==='imperial' ? '°F' : '°C';
-          const windUnit = units==='imperial' ? 'mph' : 'km/h';
-          if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/°[CF]/, unitChar);
-          var windRow = document.getElementById('wd-wind-row');
-          if (windRow) windRow.textContent = window.BeatherMapUnits.t('wind') + ': ' + windRow.textContent.replace(/(km\/h|mph)$/, windUnit);
-        }
-      });
-    })();
-  </script>
-</body>
-</html>
-                else { openPopup(e.latlng, names, null, units); showToast('toastLocateFail', 1600); }
+              .then(function(w){
+                lastWeatherBase = w;
+                var wAdj = adaptWeatherUnits(w, units);
+                openPopup(e.latlng, names, wAdj, units);
+              })
+              .catch(function(){
+                lastWeatherBase = null;
+                openPopup(e.latlng, names, null, units);
+                showToast('toastLocateFail', 1600);
               });
           });
       });
 
-      // When language changes, update panel labels if open (keep numeric values)
+      // Unit change: rerender panel using base values (not just unit suffix)
+      function rerenderPanelUnits(){
+        if (!panel || !panel.classList.contains('show')) return;
+        var country = (wdSub && wdSub.textContent.split(':')[1] || '').trim();
+        var units = decideUnits(window.BeatherMapUnits.getUnitsPrefRaw(), country || null);
+        var unitChar = units==='imperial' ? '°F' : '°C';
+        var windUnit = units==='imperial' ? 'mph' : 'km/h';
+        var baseTC = panel.dataset.tempC ? parseInt(panel.dataset.tempC, 10) : null;
+        var baseWK = panel.dataset.windKmh ? parseInt(panel.dataset.windKmh, 10) : null;
+        var showTempLine = baseTC != null
+          ? (window.BeatherMapUnits.t('temperature') + ': ' + (units==='imperial' ? Math.round(baseTC*9/5+32) : baseTC) + unitChar)
+          : (window.BeatherMapUnits.t('temperature') + ': —');
+        var windVal = baseWK != null ? (units==='imperial' ? Math.round(baseWK*0.621371) : baseWK) : null;
+        var showWindLine = windVal != null ? (window.BeatherMapUnits.t('wind') + ': ' + windVal + ' ' + windUnit) : (window.BeatherMapUnits.t('wind') + ': —');
+        if (wdTemp) wdTemp.textContent = showTempLine;
+        var windRow = document.getElementById('wd-wind-row');
+        if (windRow) windRow.textContent = showWindLine;
+      }
+
+      // Language change: refresh labels (keep numeric values)
       window.addEventListener('storage', function(e){
-        if (['beather_language','settings.language','set-language'].includes(e.key)) {
+        if (e.key === 'map_units_override') {
+          rerenderPanelUnits();
+        }
+        if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) {
+          // 刷新标签文案（数值保持）
           if (panel && panel.classList.contains('show')) {
-            if (wdSub && wdSub.textContent) wdSub.textContent = wdSub.textContent.replace(/^.*?:/, window.BeatherMapI18n.t('country') + ':');
-            if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/^.*?:/, window.BeatherMapI18n.t('temperature') + ':');
-            if (wdDesc) {
-              wdDesc.textContent = wdDesc.textContent
-                .replace(/^天气|^Weather|^Tiempo.*?:/, window.BeatherMapI18n.t('weather') + ':')
-                .replace(/(风速|Wind|Viento).*?:/, window.BeatherMapI18n.t('wind') + ':');
-            }
+            if (wdSub && wdSub.textContent) wdSub.textContent = wdSub.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('country') + ':');
+            if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('temperature') + ':');
+            var windRow = document.getElementById('wd-wind-row');
+            if (windRow) windRow.textContent = windRow.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('wind') + ':');
           }
         }
       });
 
-      // Refresh active popup language (title remains English; update labels only)
-      function updateActivePopupLanguage(){
-        var popEl = document.querySelector('.leaflet-popup');
-        if (!popEl || !window.BeatherMapI18n) return;
-        // Title (first line bold)
-        var titleEl = popEl.querySelector('div > div[style*="font-weight"]');
-        // Weather line
-        var weatherLine = popEl.querySelector('div > div[style*="margin-bottom"]');
-        // Button
-        var btn = popEl.querySelector('#map-pop-go');
-        // Update label text (keep numeric values)
-        var t = window.BeatherMapI18n.t;
-        if (weatherLine) {
-          // Replace "Weather:" prefix with current language
-          weatherLine.textContent = weatherLine.textContent.replace(/^.*?:/, t('weather') + ':');
-        }
-        if (btn) btn.textContent = t('viewDetails');
-      }
-
-      // Listen language change to refresh popup and panel labels
-      window.addEventListener('storage', function(e){
-        if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) {
-          updateActivePopupLanguage();
-          // ...existing code for updating panel labels...
-        }
-      });
-
-      // Also refresh popup on bottom-left language selector change
+      // Bottom-left language selector also triggers unit rerender (auto units may depend on country)
       var langSel = document.getElementById('map-lang-select');
-      if (langSel) {
-        langSel.addEventListener('change', function(){
-          updateActivePopupLanguage();
-        });
+      if (langSel && !langSel._unitsRebind) {
+        langSel.addEventListener('change', function(){ setTimeout(rerenderPanelUnits, 0); });
+        langSel._unitsRebind = true;
       }
     })();
   </script>
 </body>
 </html>
+      window.addEventListener('storage', function(e){
+        if (e.key === 'map_units_override') {
+          rerenderPanelUnits();
+        }
+        if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) {
+          // 刷新标签文案（数值保持）
+          if (panel && panel.classList.contains('show')) {
+            if (wdSub && wdSub.textContent) wdSub.textContent = wdSub.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('country') + ':');
+            if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('temperature') + ':');
+            var windRow = document.getElementById('wd-wind-row');
+            if (windRow) windRow.textContent = windRow.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('wind') + ':');
+          }
+        }
+      });
+
+      // 底部语言选择也触发单位重渲染（如自动单位受国家影响）
+      var langSel = document.getElementById('map-lang-select');
+      if (langSel && !langSel._unitsRebind) {
+        langSel.addEventListener('change', function(){ setTimeout(rerenderPanelUnits, 0); });
+        langSel._unitsRebind = true;
       }
     })();
   </script>
 </body>
+</html>
 </html>

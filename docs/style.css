@@ -433,7 +433,7 @@ nav a:focus, nav a:active { outline:none; }
   border-color: rgba(33,150,243,0.35);
 }
 .display-content { padding: 8px 6px; border-left: 2px solid rgba(0,0,0,0.06); }
-/* 保持集合内 label 紧凑 */
+/* Keep labels compact within the set */
 #display-list label {
   display: flex;
   align-items: center;
