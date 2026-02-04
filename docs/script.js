@@ -1192,20 +1192,28 @@ async function weatherFn(query, options = {}) {
 
 		const endpoint = `${url}?lat=${coords.lat}&lon=${coords.lon}&appid=${apiKey}&units=${encodeURIComponent(units)}&lang=${encodeURIComponent(lang)}`;
 		const res = await fetch(endpoint);
-		const data = await res.json();
-		if (res.ok) {
-			const weatherMain = data.weather[0].main.toLowerCase();
-			switchWeatherTheme(weatherMain);
-			// keep lastPlaceMeta for geolocation case (no city meta); store globally for reuse
-			window.lastPlaceMeta = lastPlaceMeta || window.lastPlaceMeta || null;
-			weatherShowFn(data, { lang, units, placeMeta: window.lastPlaceMeta });
-		} else {
+		if (!res.ok) {
+			// surface message and stop
 			alert(getT(lang,'alert.cityNotFound','City not found. Please try again.'));
+			return;
 		}
+		const data = await res.json();
+		if (!data || !data.weather || !data.weather.length || !data.main) {
+			alert(getT(lang,'alert.cityNotFound','City not found. Please try again.'));
+			return;
+		}
+		const weatherMain = (data.weather[0].main || '').toLowerCase();
+		switchWeatherTheme(weatherMain);
+		window.lastPlaceMeta = lastPlaceMeta || window.lastPlaceMeta || null;
+		weatherShowFn(data, { lang, units, placeMeta: window.lastPlaceMeta });
 	} catch (error) {
 		console.error('Error fetching weather data:', error);
+		alert(getT((options.lang||getLang()), 'alert.cityNotFound', 'City not found. Please try again.'));
 	}
 }
+
+// Expose globally so index.html handlers can invoke it
+window.weatherFn = weatherFn;
 
 // Switch weather theme
 function switchWeatherTheme(weatherMain) {
