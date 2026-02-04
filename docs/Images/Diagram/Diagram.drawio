@@ -1,147 +1,182 @@
-<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36" version="28.2.9">
-  <diagram name="Page-1" id="u_Qz1QSEAgeh4Z0MyeyP">
-    <mxGraphModel dx="1426" dy="681" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" version="29.3.7">
+  <diagram id="Beather-UML-Class" name="Beather Class Diagram">
+    <mxGraphModel dx="3660" dy="1606" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1400" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="hCasaZs2D6WICSNFCS_E-1" value="Beather" style="html=1;whiteSpace=wrap;fillColor=#647687;fontColor=#ffffff;strokeColor=#314354;" vertex="1" parent="1">
-          <mxGeometry x="370" y="80" width="110" height="50" as="geometry" />
+        <mxCell id="GameManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;" value="GameManager" vertex="1">
+          <mxGeometry height="220" width="220" x="1280" y="630" as="geometry" />
         </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-2" value="BeatherWeb" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#1ba1e2;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontColor=#ffffff;strokeColor=#006EAF;" vertex="1" parent="1">
-          <mxGeometry x="530" y="160" width="140" height="80" as="geometry">
-            <mxRectangle x="530" y="160" width="110" height="30" as="alternateBounds" />
+        <mxCell id="GameManager-attr" parent="GameManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- gameActive: boolean&#xa;- gameScore: number&#xa;- gameTime: number&#xa;- gameTimerInterval: number&#xa;- sunClickTimestamps: array&#xa;- frenzyActive: boolean&#xa;- activeGame: string" vertex="1">
+          <mxGeometry height="120" width="220" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="GameManager-sep" parent="GameManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="220" y="146" as="geometry" />
+        </mxCell>
+        <mxCell id="GameManager-methods" parent="GameManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ startGame(): void&#xa;+ stopGame(): void&#xa;+ endGame(): void&#xa;+ getBestScore(): number&#xa;+ setBestScore(score): void" vertex="1">
+          <mxGeometry height="73" width="220" y="147" as="geometry" />
+        </mxCell>
+        <mxCell id="SunnyClicker" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" value="SunnyClicker" vertex="1">
+          <mxGeometry height="160" width="220" x="1380" y="970" as="geometry" />
+        </mxCell>
+        <mxCell id="SunnyClicker-attr" parent="SunnyClicker" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- clickCount: number&#xa;- frenzyMultiplier: number&#xa;- spawnRate: number" vertex="1">
+          <mxGeometry height="60" width="220" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="SunnyClicker-sep" parent="SunnyClicker" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="220" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="SunnyClicker-methods" parent="SunnyClicker" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ startGame(): void&#xa;+ spawnGameIcons(): void&#xa;+ handleClick(): void&#xa;+ activateFrenzy(): void" vertex="1">
+          <mxGeometry height="73" width="220" y="87" as="geometry" />
+        </mxCell>
+        <mxCell id="FlappyCloud" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" value="FlappyCloud" vertex="1">
+          <mxGeometry height="200" width="220" x="1770" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="FlappyCloud-attr" parent="FlappyCloud" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- cloudX: number&#xa;- cloudY: number&#xa;- cloudVelY: number&#xa;- obstacles: array&#xa;- score: number&#xa;- isRunning: boolean" vertex="1">
+          <mxGeometry height="100" width="220" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="FlappyCloud-sep" parent="FlappyCloud" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="220" y="126" as="geometry" />
+        </mxCell>
+        <mxCell id="FlappyCloud-methods" parent="FlappyCloud" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ startFlappy(): void&#xa;+ updateFlappy(): void&#xa;+ drawFlappy(): void&#xa;+ handleCollision(): boolean" vertex="1">
+          <mxGeometry height="73" width="220" y="127" as="geometry" />
+        </mxCell>
+        <mxCell id="WeatherManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" value="WeatherManager" vertex="1">
+          <mxGeometry height="190" width="240" x="80" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WeatherManager-attr" parent="WeatherManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- currentTemp: number&#xa;- weatherState: object&#xa;- currentCity: string&#xa;- autoDetect: boolean&#xa;- lastFetch: timestamp" vertex="1">
+          <mxGeometry height="90" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="WeatherManager-sep" parent="WeatherManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="240" y="116" as="geometry" />
+        </mxCell>
+        <mxCell id="WeatherManager-methods" parent="WeatherManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ weatherFn(city): void&#xa;+ weatherShowFn(): void&#xa;+ switchWeatherTheme(type): void&#xa;+ detectLocationAndFetch(): void" vertex="1">
+          <mxGeometry height="73" width="240" y="117" as="geometry" />
+        </mxCell>
+        <mxCell id="ClockManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;" value="ClockManager" vertex="1">
+          <mxGeometry height="160" width="220" x="1630" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="ClockManager-attr" parent="ClockManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- clockInterval: number&#xa;- is24Hour: boolean&#xa;- timezone: string" vertex="1">
+          <mxGeometry height="60" width="220" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="ClockManager-sep" parent="ClockManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="220" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="ClockManager-methods" parent="ClockManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ startClock(): void&#xa;+ stopClock(): void&#xa;+ updateClock(): void&#xa;+ getCountryName(): string" vertex="1">
+          <mxGeometry height="73" width="220" y="87" as="geometry" />
+        </mxCell>
+        <mxCell id="LocalizationManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#e2efda;strokeColor=#82b366;strokeWidth=2;" value="LocalizationManager" vertex="1">
+          <mxGeometry height="180" width="240" x="410" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="LocalizationManager-attr" parent="LocalizationManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- currentLanguage: string&#xa;- i18n: object&#xa;- supportedLanguages: array&#xa;- i18nDict: object" vertex="1">
+          <mxGeometry height="80" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="LocalizationManager-sep" parent="LocalizationManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="240" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="LocalizationManager-methods" parent="LocalizationManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ getLang(): string&#xa;+ getT(key): string&#xa;+ applyI18n(): void&#xa;+ mapLangToMoment(lang): string" vertex="1">
+          <mxGeometry height="73" width="240" y="107" as="geometry" />
+        </mxCell>
+        <mxCell id="StorageManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#f0f0f0;strokeColor=#666666;strokeWidth=2;" value="StorageManager" vertex="1">
+          <mxGeometry height="190" width="240" x="810" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="StorageManager-attr" parent="StorageManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- storageKeys: object&#xa;- localStorage: Storage&#xa;- defaultValues: object" vertex="1">
+          <mxGeometry height="70" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="StorageManager-sep" parent="StorageManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="240" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="StorageManager-methods" parent="StorageManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ getItem(key): string&#xa;+ setItem(key, value): void&#xa;+ removeItem(key): void&#xa;+ getBestScore(gameName): number&#xa;+ setBestScore(gameName, score): void" vertex="1">
+          <mxGeometry height="93" width="240" y="97" as="geometry" />
+        </mxCell>
+        <mxCell id="MediaManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#d4e6f1;strokeColor=#3498db;strokeWidth=2;" value="MediaManager" vertex="1">
+          <mxGeometry height="180" width="240" x="1000" y="1010" as="geometry" />
+        </mxCell>
+        <mxCell id="MediaManager-attr" parent="MediaManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- audioVolume: number&#xa;- audioEnabled: boolean&#xa;- videoEnabled: boolean" vertex="1">
+          <mxGeometry height="70" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="MediaManager-sep" parent="MediaManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="240" y="96" as="geometry" />
+        </mxCell>
+        <mxCell id="MediaManager-methods" parent="MediaManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ playAudio(fileName): void&#xa;+ playVideo(fileName): void&#xa;+ setVolume(level): void&#xa;+ toggleAudio(): void&#xa;+ toggleVideo(): void" vertex="1">
+          <mxGeometry height="83" width="240" y="97" as="geometry" />
+        </mxCell>
+        <mxCell id="MapManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#ccf0ff;strokeColor=#0066cc;strokeWidth=2;" value="MapManager" vertex="1">
+          <mxGeometry height="210" width="240" x="30" y="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="MapManager-attr" parent="MapManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- mapInstance: object&#xa;- currentZoom: number&#xa;- currentCenter: array&#xa;- tileLayers: object&#xa;- activeOverlays: array" vertex="1">
+          <mxGeometry height="90" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="MapManager-sep" parent="MapManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="240" y="116" as="geometry" />
+        </mxCell>
+        <mxCell id="MapManager-methods" parent="MapManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ initializeMap(): void&#xa;+ addTileLayer(layer): void&#xa;+ addWeatherOverlay(type): void&#xa;+ setCenter(lat, lon): void&#xa;+ updateMapView(): void" vertex="1">
+          <mxGeometry height="93" width="240" y="117" as="geometry" />
+        </mxCell>
+        <mxCell id="UIManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fff0f5;strokeColor=#cc0066;strokeWidth=2;" value="UIManager" vertex="1">
+          <mxGeometry height="180" width="240" x="1460" y="1210" as="geometry" />
+        </mxCell>
+        <mxCell id="UIManager-attr" parent="UIManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- controlsInitialized: boolean&#xa;- modalStates: object&#xa;- buttonStates: object&#xa;- splashScreen: element" vertex="1">
+          <mxGeometry height="80" width="240" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="UIManager-sep" parent="UIManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="240" y="106" as="geometry" />
+        </mxCell>
+        <mxCell id="UIManager-methods" parent="UIManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ initControls(): void&#xa;+ updateButtonState(button): void&#xa;+ setupSettingsUI(): void&#xa;+ initSplashScreen(): void" vertex="1">
+          <mxGeometry height="73" width="240" y="107" as="geometry" />
+        </mxCell>
+        <mxCell id="rel1" edge="1" parent="1" source="GameManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="StorageManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel2" edge="1" parent="1" source="AssetManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="LocalizationManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel3" edge="1" parent="1" source="SunnyClicker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;strokeWidth=2;" target="GameManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel4" edge="1" parent="1" source="FlappyCloud" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=0;strokeWidth=2;" target="GameManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel5" edge="1" parent="1" source="WeatherManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="LocalizationManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel6" edge="1" parent="1" source="ClockManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="LocalizationManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel7" edge="1" parent="1" source="SunnyClicker" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="MediaManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel8" edge="1" parent="1" source="FlappyCloud" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="MediaManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel9" edge="1" parent="1" source="MapManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="WeatherManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel10" edge="1" parent="1" source="MapManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="LocalizationManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel11" edge="1" parent="1" source="UIManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="LocalizationManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="rel12" edge="1" parent="1" source="UIManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="StorageManager">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ibyPlX-iAY207YjNfc9o-2" edge="1" parent="1" source="GameManager" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=2;" target="AssetManager" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1280" y="710" as="sourcePoint" />
+            <mxPoint x="470" y="550" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-3" value="+ Template: Index.html&lt;div&gt;+ Logic: Script.js&lt;/div&gt;&lt;div&gt;+ Static: Style.css&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-2">
-          <mxGeometry y="26" width="140" height="54" as="geometry" />
+        <mxCell id="AssetManager" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;fillColor=#fffacd;strokeColor=#999900;strokeWidth=2;" value="AssetManager" vertex="1">
+          <mxGeometry height="160" width="240" x="630" y="1020" as="geometry" />
         </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-6" value="BeatherApp" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#60a917;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontColor=#ffffff;strokeColor=#2D7600;" vertex="1" parent="1">
-          <mxGeometry x="180" y="160" width="140" height="90" as="geometry" />
+        <mxCell id="AssetManager-attr" parent="AssetManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="- imagesBasePath: string&#xa;- assetCache: object&#xa;- resolvedPaths: object" vertex="1">
+          <mxGeometry height="70" width="240" y="26" as="geometry" />
         </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-7" value="+ field: UI&lt;div&gt;+ field: Weather&lt;/div&gt;&lt;div&gt;+ field Main&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-6">
-          <mxGeometry y="26" width="140" height="64" as="geometry" />
+        <mxCell id="AssetManager-sep" parent="AssetManager" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=top;spacingTop=-1;spacingLeft=4;spacingRight=4;rotatable=0;deletable=0;editable=0;connectable=0;strokeColor=inherit;fontSize=10;" value="" vertex="1">
+          <mxGeometry height="1" width="240" y="96" as="geometry" />
         </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-11" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="hCasaZs2D6WICSNFCS_E-1">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="350" y="310" as="sourcePoint" />
-            <mxPoint x="260" y="150" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-12" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="hCasaZs2D6WICSNFCS_E-1">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="540" y="180" as="sourcePoint" />
-            <mxPoint x="570" y="150" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-14" value="Server" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#1ba1e2;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontColor=#ffffff;strokeColor=#006EAF;" vertex="1" parent="1">
-          <mxGeometry x="530" y="310" width="140" height="120" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-15" value="+ Flask" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-14">
-          <mxGeometry y="26" width="140" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-16" value="+ BeatherWeb" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-14">
-          <mxGeometry y="52" width="140" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-17" value="+ SSH hosting; personal server" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-14">
-          <mxGeometry y="78" width="140" height="42" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-18" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;exitX=0.5;exitY=1.056;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="hCasaZs2D6WICSNFCS_E-3" target="hCasaZs2D6WICSNFCS_E-14">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="680" y="280" as="sourcePoint" />
-            <mxPoint x="770" y="325" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-19" value="«Possible Domain from GoDaddy»&lt;br&gt;&lt;b&gt;RexBoy.net&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" vertex="1" parent="1">
-          <mxGeometry x="730" y="350" width="110" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-20" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="hCasaZs2D6WICSNFCS_E-19" target="hCasaZs2D6WICSNFCS_E-17">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="710" y="300" as="sourcePoint" />
-            <mxPoint x="710" y="367" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-21" value="UI" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;" vertex="1" parent="1">
-          <mxGeometry x="30" y="420" width="160" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-22" value="+ field: PySide6&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-21">
-          <mxGeometry y="26" width="160" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-23" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-21">
-          <mxGeometry y="52" width="160" height="8" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-24" value="+ method(render): Renders window and app template" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-21">
-          <mxGeometry y="60" width="160" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-26" value="Weather Client" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;" vertex="1" parent="1">
-          <mxGeometry x="320" y="420" width="160" height="100" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-27" value="+ field: WeatherData" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-26">
-          <mxGeometry y="26" width="160" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-28" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-26">
-          <mxGeometry y="52" width="160" height="8" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-29" value="+ fetchWeather(): Gets weather data" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-26">
-          <mxGeometry y="60" width="160" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-30" value="Main&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px; font-weight: 400; text-align: start; text-wrap-mode: nowrap;&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20value%3D%22%22%20style%3D%22endArrow%3Dblock%3Bdashed%3D1%3BendFill%3D0%3BendSize%3D12%3Bhtml%3D1%3Brounded%3D0%3BexitX%3D0.5%3BexitY%3D1.056%3BexitDx%3D0%3BexitDy%3D0%3BexitPerimeter%3D0%3BentryX%3D0.5%3BentryY%3D0%3BentryDx%3D0%3BentryDy%3D0%3B%22%20edge%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20width%3D%22160%22%20relative%3D%221%22%20as%3D%22geometry%22%3E%3CmxPoint%20x%3D%22600%22%20y%3D%22243%22%20as%3D%22sourcePoint%22%2F%3E%3CmxPoint%20x%3D%22600%22%20y%3D%22310%22%20as%3D%22targetPoint%22%2F%3E%3C%2FmxGeometry%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;" vertex="1" parent="1">
-          <mxGeometry x="170" y="300" width="160" height="86" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-31" value="+ field: Entry Point" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-30">
-          <mxGeometry y="26" width="160" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-32" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-30">
-          <mxGeometry y="52" width="160" height="8" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-33" value="+ method(run): lauches app" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-30">
-          <mxGeometry y="60" width="160" height="26" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-35" value="«Live Website»&lt;br&gt;&lt;b&gt;RexBoy.net or&lt;br&gt;server IP adress&lt;/b&gt;" style="html=1;whiteSpace=wrap;fillColor=#1ba1e2;fontColor=#ffffff;strokeColor=#006EAF;" vertex="1" parent="1">
-          <mxGeometry x="545" y="496" width="110" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-36" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;exitX=0.507;exitY=1.071;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="hCasaZs2D6WICSNFCS_E-17">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="760" y="390" as="sourcePoint" />
-            <mxPoint x="600" y="480" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-37" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.514;entryY=1.063;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="hCasaZs2D6WICSNFCS_E-30" target="hCasaZs2D6WICSNFCS_E-7">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="560" y="210" as="sourcePoint" />
-            <mxPoint x="450" y="255" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-38" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="390" y="410" as="sourcePoint" />
-            <mxPoint x="340" y="360" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-39" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="110" y="410" as="sourcePoint" />
-            <mxPoint x="160" y="360" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-40" value="Script.js" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#1ba1e2;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fontColor=#ffffff;strokeColor=#006EAF;" vertex="1" parent="1">
-          <mxGeometry x="370" y="250" width="140" height="100" as="geometry">
-            <mxRectangle x="530" y="160" width="110" height="30" as="alternateBounds" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-41" value="+ Format: javaScript&lt;div&gt;+ fetchWeather(): Similar function; just different language&lt;/div&gt;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="hCasaZs2D6WICSNFCS_E-40">
-          <mxGeometry y="26" width="140" height="74" as="geometry" />
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-42" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;exitX=0.75;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="hCasaZs2D6WICSNFCS_E-26">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="610" y="450" as="sourcePoint" />
-            <mxPoint x="440" y="360" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="hCasaZs2D6WICSNFCS_E-43" value="" style="endArrow=block;dashed=1;endFill=0;endSize=12;html=1;rounded=0;" edge="1" parent="1">
-          <mxGeometry width="160" relative="1" as="geometry">
-            <mxPoint x="440" y="240" as="sourcePoint" />
-            <mxPoint x="520" y="200" as="targetPoint" />
-          </mxGeometry>
+        <mxCell id="AssetManager-methods" parent="AssetManager" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontSize=10;" value="+ resolvePath(path): string&#xa;+ detectImagesBase(): string&#xa;+ rewriteDOMAssetPaths(): void" vertex="1">
+          <mxGeometry height="63" width="240" y="97" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
