@@ -10,10 +10,10 @@ https://sgandre3890.github.io/Beather/
 Our website
 
 ### UML Diagram
-![Logo](https://github.com/Sgandre3890/Beather/blob/staticWeb/Images/NEW_UML.png)
+![Logo](https://github.com/Sgandre3890/Beather/blob/staticWeb/docs/Images/NEW_UML.png)
 
 ### Gantt Work Chart (Updated: 11-05-2025 )
-![Logo](https://github.com/Sgandre3890/Beather/blob/staticWeb/Images/Updated%20Gantt.png)
+![Logo](https://github.com/Sgandre3890/Beather/blob/staticWeb/docs/Images/Updated%20Gantt.png)
 
 ## ToDo List - Future Feature Ideas
 
