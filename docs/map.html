@@ -448,6 +448,14 @@
 
     // Popups and details: use unified units helpers
     (function(){
+      var lastWeatherBase = null;
+      // Convert weather object (temp °C, wind km/h) to display values for given units
+      function adaptWeatherUnits(w, units){
+        if (!w) return null;
+        var temp = (w.temp != null) ? (units === 'imperial' ? Math.round(w.temp * 9 / 5 + 32) : Math.round(w.temp)) : null;
+        var wind = (w.wind != null) ? (units === 'imperial' ? Math.round(w.wind * 0.621371) : Math.round(w.wind)) : null;
+        return { temp: temp, wind: wind, desc: w.desc };
+      }
       // Toast helpers
       var toastEl;
       function ensureToast(){
@@ -529,7 +537,7 @@
               temp: Math.round(data.main.temp - 273.15),
               desc: (data.weather && data.weather.length) ? data.weather[0].description : '',
               wind: (data.wind && data.wind.speed) ? Math.round(data.wind.speed * 3.6) : null, // m/s to km/h
-              country: data.sys.country,
+              country: (data.sys && data.sys.country) || '',
               name: data.name,
               lat: lat, lon: lon,
               source: 'owm'
@@ -573,12 +581,17 @@
 
       // Note: popup displays already converted numbers (weatherDisplay)
       function openPopup(latlng, names, weatherDisplay, units){
-        // 注意：弹窗展示用已换算的数值 weatherDisplay
+        // 注意：弹窗展示用已换算的数值 weatherDisplay，并显示气温
         const title = names.en || 'Unknown';
         const descLine = (weatherDisplay && weatherDisplay.desc) ? weatherDisplay.desc : '—';
+        const unitChar = (units === 'imperial') ? '°F' : '°C';
+        const tempLine = (weatherDisplay && weatherDisplay.temp != null)
+          ? (window.BeatherMapUnits.t('temperature') + ': ' + weatherDisplay.temp + unitChar)
+          : '';
         const html = ''
           + '<div style="min-width:220px">'
           +   '<div style="font-weight:700;margin-bottom:6px;">'+title+'</div>'
+          +   (tempLine ? '<div style="margin-bottom:6px;">'+tempLine+'</div>' : '')
           +   '<div style="margin-bottom:10px;">'+window.BeatherMapUnits.t('weather')+': '+descLine+'</div>'
           +   '<div style="display:flex;justify-content:flex-end;gap:8px;">'
           +     '<button id="map-pop-go" style="padding:4px 10px;">'+window.BeatherMapUnits.t('viewDetails')+'</button>'
@@ -722,30 +735,4 @@
     })();
   </script>
 </body>
-</html>
-      window.addEventListener('storage', function(e){
-        if (e.key === 'map_units_override') {
-          rerenderPanelUnits();
-        }
-        if (['beather_language','settings.language','set-language','map_lang_override'].includes(e.key)) {
-          // 刷新标签文案（数值保持）
-          if (panel && panel.classList.contains('show')) {
-            if (wdSub && wdSub.textContent) wdSub.textContent = wdSub.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('country') + ':');
-            if (wdTemp) wdTemp.textContent = wdTemp.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('temperature') + ':');
-            var windRow = document.getElementById('wd-wind-row');
-            if (windRow) windRow.textContent = windRow.textContent.replace(/^.*?:/, window.BeatherMapUnits.t('wind') + ':');
-          }
-        }
-      });
-
-      // 底部语言选择也触发单位重渲染（如自动单位受国家影响）
-      var langSel = document.getElementById('map-lang-select');
-      if (langSel && !langSel._unitsRebind) {
-        langSel.addEventListener('change', function(){ setTimeout(rerenderPanelUnits, 0); });
-        langSel._unitsRebind = true;
-      }
-    })();
-  </script>
-</body>
-</html>
 </html>

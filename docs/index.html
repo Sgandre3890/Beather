@@ -677,7 +677,7 @@
 					// persist（移除湿度/气压）
 					lsSet('beather_audio', String(audio));
 					lsSet('beather_bgvideo', String(video));
-					lsSet('beather_volume', String(vol));
+					lsSet('beather_volume', String(Math.min(100, Math.max(0, volPct)) / 100));
 					lsSet('beather_lang', lang);
 					lsSet('beather_units', units);
 					lsSet('beather_autoDetect', String(autoDetect));

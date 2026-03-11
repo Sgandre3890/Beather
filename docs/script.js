@@ -1369,15 +1369,15 @@ function startFlappy() {
 	flappy._blink = false;
 	flappy.groundHeight = 26;
 
-	// optional pipe image
-	if (pipeImageSrc) {
-		flappy.pipeBackImg = new Image();
-		flappy.pipeBackImg.src = pipeImageSrc;
-	}
-	if (pipeFrontImageSrc) {
-		flappy.pipeFrontImg = new Image();
-		flappy.pipeFrontImg.src = pipeFrontImageSrc;
-	}
+	// optional pipe image (resolve at game start so path detection has run)
+		if (pipeImageSrc) {
+			flappy.pipeBackImg = new Image();
+			flappy.pipeBackImg.src = resolvePath('../Images/pipes/pipe_back.svg');
+		}
+		if (pipeFrontImageSrc) {
+			flappy.pipeFrontImg = new Image();
+			flappy.pipeFrontImg.src = resolvePath('../Images/pipes/pipe_front.svg');
+		}
 
 	// input handlers
 	function flapHandler(e) {
