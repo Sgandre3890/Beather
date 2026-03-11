@@ -31,7 +31,7 @@
 		/* Background container as placeholder; prevent repaint jitter */
 		.page-bg {
 			/* You can set a static background image as a placeholder */
-			background: #000 url('../Images/weatherbackground/background.jpg') center/cover no-repeat;
+			background: #0a4d6e url('Images/weatherbackground/background.jpg') center/cover no-repeat;
 			/* Prevent repaint jitter */
 			will-change: transform;
 			backface-visibility: hidden;
@@ -41,12 +41,12 @@
 		}
 	</style>
 	<!-- Restore preload for weatherbackground and cloudspipes resources -->
-	<link rel="preload" as="image" href="../Images/weatherbackground/background.jpg">
-	<link rel="preload" as="video" href="../Images/weatherbackground/background.mp4" type="video/mp4">
-	<link rel="preload" as="audio" href="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
-	<link rel="preload" as="image" href="../Images/cloudspipes/pipe_top.png">
-	<link rel="preload" as="image" href="../Images/cloudspipes/pipe_bottom.png">
-	<link rel="preload" as="image" href="../Images/cloudspipes/cloud.png">
+	<link rel="preload" as="image" href="Images/weatherbackground/background.jpg">
+	<link rel="preload" as="video" href="Images/weatherbackground/background.mp4" type="video/mp4">
+	<link rel="preload" as="audio" href="Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
+	<link rel="preload" as="image" href="Images/cloudspipes/pipe_top.png">
+	<link rel="preload" as="image" href="Images/cloudspipes/pipe_bottom.png">
+	<link rel="preload" as="image" href="Images/cloudspipes/cloud.png">
 </head>
 
 
@@ -60,10 +60,10 @@
 	<div id="page-bg" class="page-bg"></div>
 	<!-- Render audio first, then video -->
 	<audio id="weather-audio" class="weather-audio" loop>
-		<source src="../Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
+		<source src="Images/weatherbackground/Backgroundmusic.mp3" type="audio/mpeg">
 	</audio>
-	<video id="weather-video" class="weather-video" autoplay muted loop playsinline preload="auto" poster="../Images/weatherbackground/background.jpg" style="visibility:hidden;">
-		<source src="../Images/weatherbackground/background.mp4" type="video/mp4">
+	<video id="weather-video" class="weather-video" autoplay muted loop playsinline preload="auto" poster="Images/weatherbackground/background.jpg" style="visibility:hidden;">
+		<source src="Images/weatherbackground/background.mp4" type="video/mp4">
 	</video>
 
 	<!-- Asset placeholders for pipes and clouds (used by Flappy) -->
@@ -811,14 +811,14 @@
 		(function exposeAssets(){
 			window.BeatherAssets = {
 				weatherbackground: {
-					poster: '../Images/weatherbackground/background.jpg',
-					video: '../Images/weatherbackground/background.mp4',
-					audio: '../Images/weatherbackground/Backgroundmusic.mp3'
+					poster: 'Images/weatherbackground/background.jpg',
+					video: 'Images/weatherbackground/background.mp4',
+					audio: 'Images/weatherbackground/Backgroundmusic.mp3'
 				},
 				cloudspipes: {
-					cloud: '../Images/cloudspipes/cloud.png',
-					pipeTop: '../Images/cloudspipes/pipe_top.png',
-					pipeBottom: '../Images/cloudspipes/pipe_bottom.png'
+					cloud: 'Images/cloudspipes/cloud.png',
+					pipeTop: 'Images/cloudspipes/pipe_top.png',
+					pipeBottom: 'Images/cloudspipes/pipe_bottom.png'
 				}
 			};
 		})();

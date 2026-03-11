@@ -211,11 +211,13 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: -2;
+    visibility: hidden;
     opacity: 0; /* hidden by default to avoid flash */
     transition: opacity 0.3s ease-in-out;
 }
 
 .weather-video.visible {
+    visibility: visible;
     opacity: 1; /* shown when media is ready */
 }
 

@@ -360,7 +360,7 @@ const weatherState = {
 };
 
 // Asset base path (runtime-detected)
-let IMAGES_BASE = '../Images/';
+let IMAGES_BASE = 'Images/';
 let assetBasePath = IMAGES_BASE + 'weatherbackground/';
 
 function resolvePath(p) {
@@ -371,11 +371,11 @@ function resolvePath(p) {
 }
 
 function detectImagesBase(callback) {
-	// Try ../Images/ first, then fallback to Images/
-	const testFile = 'BeatherLogo2.png';
+	// Try Images/ first (docs/Images/ structure), then ../Images/
+	const testFile = 'WebAssets/SunnyIcon.svg';
 	const img = new Image();
 	img.onload = function () {
-		IMAGES_BASE = '../Images/';
+		IMAGES_BASE = 'Images/';
 		assetBasePath = IMAGES_BASE + 'weatherbackground/';
 		try { rewriteDOMAssetPaths(); } catch (_) {}
 		if (typeof callback === 'function') callback();
@@ -383,18 +383,21 @@ function detectImagesBase(callback) {
 	img.onerror = function () {
 		const img2 = new Image();
 		img2.onload = function () {
-			IMAGES_BASE = 'Images/';
+			IMAGES_BASE = '../Images/';
 			assetBasePath = IMAGES_BASE + 'weatherbackground/';
 			try { rewriteDOMAssetPaths(); } catch (_) {}
 			if (typeof callback === 'function') callback();
 		};
 		img2.onerror = function () {
-			// Couldn't resolve either; proceed with default
+			// Couldn't resolve either; use Images/ as default (common for docs/ structure)
+			IMAGES_BASE = 'Images/';
+			assetBasePath = IMAGES_BASE + 'weatherbackground/';
+			try { rewriteDOMAssetPaths(); } catch (_) {}
 			if (typeof callback === 'function') callback();
 		};
-		img2.src = 'Images/' + testFile;
+		img2.src = '../Images/' + testFile;
 	};
-	img.src = '../Images/' + testFile;
+	img.src = 'Images/' + testFile;
 }
 
 function rewriteDOMAssetPaths() {
@@ -866,6 +869,7 @@ function playVideo() {
 	if (!weatherState.backgroundEnabled) {
 		try { videoEl.pause(); } catch(_) {}
 		videoEl.classList.remove('visible');
+		videoEl.style.visibility = 'hidden';
 		weatherState.videoPlaying = false;
 		return;
 	}
@@ -873,8 +877,8 @@ function playVideo() {
 	// New switch token for this call
 	const myToken = ++_videoSwitchToken;
 
-	// If source changed, safely pause and reload
-	const needChange = !currentSrc.endsWith(targetSrc);
+	// If source changed, safely pause and reload (compare by filename - works for both relative/absolute URLs)
+	const needChange = !currentSrc || !currentSrc.endsWith(weatherState.currentVideo);
 	if (needChange) {
 		try { videoEl.pause(); } catch(_) {}
 		// Hide before switching to avoid flash/black frame
@@ -891,6 +895,7 @@ function playVideo() {
 		if (myToken !== _videoSwitchToken) return;
 		// Reveal and play
 		videoEl.classList.add('visible');
+		videoEl.style.visibility = 'visible';
 		const p = videoEl.play();
 		if (p && typeof p.then === 'function') {
 			p.then(() => { weatherState.videoPlaying = true; }).catch(err => {
@@ -909,15 +914,24 @@ function playVideo() {
 	videoEl.addEventListener('canplay', onReady);
 	videoEl.addEventListener('loadeddata', onReady);
 
+	// On error (e.g. 404): show poster/fallback so user sees something
+	function onError() {
+		if (myToken !== _videoSwitchToken) return;
+		videoEl.classList.add('visible');
+		videoEl.style.visibility = 'visible';
+	}
+	videoEl.addEventListener('error', onError, { once: true });
+
 	// Fallback: if already ready enough, trigger immediately
 	if (videoEl.readyState >= 3) {
 		onReady();
 	} else {
-		// Timeout fallback: ensure it doesn't stay hidden forever
+		// Timeout fallback: ensure it doesn't stay hidden forever (e.g. slow load or 404)
 		setTimeout(() => {
 			if (myToken !== _videoSwitchToken) return;
 			try {
 				videoEl.classList.add('visible');
+				videoEl.style.visibility = 'visible';
 				const p = videoEl.play();
 				if (p && typeof p.then === 'function') {
 					p.then(() => { weatherState.videoPlaying = true; }).catch(err => {
@@ -943,10 +957,12 @@ function updateVideoState() {
 		// If already enough data, show quickly, else let playVideo handle readiness
 		if (videoEl.readyState >= 3) {
 			videoEl.classList.add('visible');
+			videoEl.style.visibility = 'visible';
 		}
 		playVideo();
 	} else {
 		videoEl.classList.remove('visible');
+		videoEl.style.visibility = 'hidden';
 		try { videoEl.pause(); } catch(_) {}
 		weatherState.videoPlaying = false;
 	}
